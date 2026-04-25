@@ -94,7 +94,8 @@ function canAttend(member, week, service /* 'first'|'second' */) {
 // 자동 생성: 한 예배(2부 또는 3부)의 로스터 만들기
 // preferred: { instrumentId: memberId } 우선 배치 (인도자 같음)
 // avoid: Set<memberId>             가능하면 피하기 (인도자 다름)
-function buildServiceRoster(members, week, service, preferred = {}, recentCounts = {}, avoid = null) {
+// prevServiceRoster: { instrumentId: memberId } 전주 해당 예배 로스터 (순환 배정용)
+function buildServiceRoster(members, week, service, preferred = {}, recentCounts = {}, avoid = null, prevServiceRoster = null) {
   const result = {};
   const used = new Set();
 
@@ -131,6 +132,10 @@ function buildServiceRoster(members, week, service, preferred = {}, recentCounts
       const pa = a.instruments.indexOf(inst.id);
       const pb = b.instruments.indexOf(inst.id);
       if (pa !== pb) return pa - pb;
+      // 순환 배정: 전주에 이 악기를 했던 사람은 후순위 (같은 선호도일 때만 적용)
+      const playedLastA = prevServiceRoster && prevServiceRoster[inst.id] === a.id ? 1 : 0;
+      const playedLastB = prevServiceRoster && prevServiceRoster[inst.id] === b.id ? 1 : 0;
+      if (playedLastA !== playedLastB) return playedLastA - playedLastB;
       return a.instruments.length - b.instruments.length;
     });
 
@@ -164,17 +169,18 @@ function buildServiceRoster(members, week, service, preferred = {}, recentCounts
 
 // ─────────────────────────────────────────────────────────
 // 전체 자동 생성
-function autoBuildRoster(members, week, recentCounts = {}) {
+function autoBuildRoster(members, week, recentCounts = {}, prevRoster = null) {
   const sameLeader = week.firstLeader && week.firstLeader === week.secondLeader;
+  const prevFirst  = prevRoster?.first  || null;
+  const prevSecond = prevRoster?.second || null;
 
-  // 2부 먼저
-  const first = buildServiceRoster(members, week, 'first', {}, recentCounts);
+  // 2부 먼저 (전주 2부 로스터 참고해서 순환 배정)
+  const first = buildServiceRoster(members, week, 'first', {}, recentCounts, null, prevFirst);
 
-  // 인도자 같음 → first와 최대한 같게 (preferred로 first 그대로 시도)
-  // 인도자 다름 → first에 배정된 사람 최대한 피하기 (avoid 세트)
+  // 3부 (전주 3부 로스터 참고)
   const second = sameLeader
-    ? buildServiceRoster(members, week, 'second', first, recentCounts)
-    : buildServiceRoster(members, week, 'second', {}, recentCounts, new Set(Object.values(first).filter(Boolean)));
+    ? buildServiceRoster(members, week, 'second', first, recentCounts, null, prevSecond)
+    : buildServiceRoster(members, week, 'second', {}, recentCounts, new Set(Object.values(first).filter(Boolean)), prevSecond);
 
   return { first, second };
 }
@@ -2225,7 +2231,8 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   }
 
   function handleGenerate() {
-    const r = autoBuildRoster(members, week);
+    // 현재 roster를 전주 데이터로 넘겨 순환 배정 적용
+    const r = autoBuildRoster(members, week, {}, roster);
     setRoster(r);
     setAnimateOnMount(true);
     setTab('roster');
