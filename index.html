@@ -2269,7 +2269,7 @@ function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad, loadMsg })
   const loaded  = loadStatus === 'loaded';
   const loadErr = loadStatus === 'error';
 
-  const saveBtnLabel = saving ? '저장 중…' : saved ? '✓ 저장됨' : saveErr ? '⚠ 오류' : '☁ 저장';
+  const saveBtnLabel = saving ? '…' : saved ? '✓' : saveErr ? '⚠' : '☁';
   const saveBtnBg    = saved ? '#10B981' : saveErr ? '#EF4444' : theme.primary;
 
   const loadBtnLabel = loading ? '불러오는 중…' : loaded ? '✓ 불러옴' : loadErr ? '⚠ 오류' : '↓ 불러오기';
@@ -2316,7 +2316,7 @@ function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad, loadMsg })
             {loadBtnLabel}
           </button>
           <button onClick={onSave} disabled={saving || loading}
-            style={{ ...btnStyle(saveBtnBg, '#fff', saving || loading), boxShadow: '0 2px 8px rgba(236,72,153,0.2)' }}>
+            style={{ ...btnStyle(saveBtnBg, '#fff', saving || loading), boxShadow: '0 2px 8px rgba(236,72,153,0.2)', padding: '5px 10px', fontSize: 15 }}>
             {saveBtnLabel}
           </button>
         </div>
