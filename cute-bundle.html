@@ -2102,42 +2102,21 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
-const LS_KEY = 'roster_v1';
-
-function lsRead() {
-  try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
-}
-function lsWrite(data) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
 // ── Firestore 로드/저장 래퍼 ──────────────────────────────
 function AppLoader({ theme: themeName = 'cute', iconPalette }) {
   const [ready, setReady] = React.useState(false);
   const [initData, setInitData] = React.useState(null);
 
   React.useEffect(() => {
-    // source: 'server' → 캐시 무시하고 항상 Firestore 서버에서 최신 데이터 fetch
-    window.FSDOC.get({ source: 'server' })
+    window.FSDOC.get()
       .then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          const fsData = { members: d.members, week: d.week, roster: d.roster };
-          lsWrite(fsData); // localStorage도 최신으로 동기화
-          setInitData(fsData);
-        } else {
-          // Firestore 문서 없으면 localStorage 확인
-          const local = lsRead();
-          if (local) setInitData(local);
+          setInitData({ members: d.members, week: d.week, roster: d.roster });
         }
         setReady(true);
       })
-      .catch(() => {
-        // Firestore 연결 실패 시 localStorage로 fallback
-        const local = lsRead();
-        if (local) setInitData(local);
-        setReady(true);
-      });
+      .catch(() => setReady(true));
   }, []);
 
   if (!ready) {
@@ -2164,24 +2143,20 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
     initData?.roster || autoBuildRoster(initData?.members || SEED_MEMBERS, initData?.week || SEED_WEEK)
   );
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
-  const [saveStatus, setSaveStatus] = useAppState('idle'); // 'idle' | 'saving' | 'saved'
+  const [saveStatus, setSaveStatus] = useAppState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
 
-  // 자동저장 — 첫 렌더(초기 로드) 제외하고 변경될 때마다 저장
-  const isFirstRender = React.useRef(true);
-  React.useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
-    const data = { members, week, roster };
-    // 1) 즉시: localStorage에 동기 저장 (refresh해도 안 사라짐)
-    lsWrite(data);
-    // 2) 비동기: Firestore에 저장 (다른 기기 동기화)
+  function handleSave() {
     setSaveStatus('saving');
-    window.FSDOC.set(data)
+    window.FSDOC.set({ members, week, roster })
       .then(() => {
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 1500);
+        setTimeout(() => setSaveStatus('idle'), 2000);
       })
-      .catch(() => setSaveStatus('idle'));
-  }, [members, week, roster]);
+      .catch(() => {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      });
+  }
 
   function handleGenerate() {
     const r = autoBuildRoster(members, week);
@@ -2203,7 +2178,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   return (
     <div style={{ width: '100%', height: '100%', background: theme.bg,
       display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-      <BrandHeader theme={theme} saveStatus={saveStatus} />
+      <BrandHeader theme={theme} saveStatus={saveStatus} onSave={handleSave} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
       </div>
@@ -2212,9 +2187,13 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   );
 }
 
-function BrandHeader({ theme, saveStatus }) {
-  const saving = saveStatus === 'saving';
-  const saved  = saveStatus === 'saved';
+function BrandHeader({ theme, saveStatus, onSave }) {
+  const saving  = saveStatus === 'saving';
+  const saved   = saveStatus === 'saved';
+  const errored = saveStatus === 'error';
+
+  const btnLabel = saving ? '저장 중…' : saved ? '✓ 저장됨' : errored ? '⚠ 오류' : '☁ 저장';
+  const btnBg    = saved ? '#10B981' : errored ? '#EF4444' : theme.primary;
 
   return (
     <div style={{
@@ -2234,14 +2213,19 @@ function BrandHeader({ theme, saveStatus }) {
           주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
         </div>
       </div>
-      <div style={{
-        fontSize: 12, fontWeight: 600,
-        color: saved ? '#10B981' : theme.textMuted,
-        transition: 'color 0.3s',
-        minWidth: 60, textAlign: 'right',
-      }}>
-        {saving ? '저장 중…' : saved ? '✓ 저장됨' : '☁ 자동저장'}
-      </div>
+      <button onClick={onSave} disabled={saving}
+        style={{
+          border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+          background: btnBg, color: '#fff',
+          borderRadius: 999, padding: '6px 14px',
+          fontSize: 13, fontWeight: 700,
+          fontFamily: theme.fontBody,
+          opacity: saving ? 0.7 : 1,
+          transition: 'background 0.2s',
+          boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
+        }}>
+        {btnLabel}
+      </button>
     </div>
   );
 }
