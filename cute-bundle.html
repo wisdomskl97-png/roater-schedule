@@ -1770,26 +1770,6 @@ function RosterScreen({ members, week, roster, setRoster, theme, animateOnMount,
           })}
         </div>
 
-        {warnings.length > 0 && !animating &&
-        <div style={{ padding: '12px 0 0' }}>
-            <div style={{
-            background: `oklch(0.96 0.04 25)`,
-            border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.danger}`,
-            borderRadius: theme.radius,
-            padding: '12px 14px'
-          }}>
-              <div style={{ fontWeight: 800, color: theme.danger, fontSize: 14, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                ⚠️ 경고 {warnings.length}건
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {warnings.slice(0, 4).map((w, i) =>
-              <div key={i} style={{ fontSize: 12, color: theme.text }}>· {w.msg}</div>
-              )}
-                {warnings.length > 4 && <div style={{ fontSize: 12, color: theme.textMuted }}>+ {warnings.length - 4}개 더</div>}
-              </div>
-            </div>
-          </div>
-        }
       </div>
 
       {/* 멤버 선택 시트 */}
