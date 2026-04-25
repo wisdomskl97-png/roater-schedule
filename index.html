@@ -2011,7 +2011,6 @@ function SummarySheet({ theme, members, week, roster, sameLeader, onClose }) {
   const text = useMemo(() => {
     const lines = [];
     lines.push(`📅 ${fmtDate(week.date)}`);
-    lines.push(`2부/3부 인도자: ${sameLeader ? '같음' : '다름'}`);
     lines.push('');
     lines.push('2부');
     INSTRUMENTS.forEach(i => { if (roster.first[i.id]) lines.push(`${i.label}: ${nameOf(roster.first[i.id])}`); });
@@ -2221,9 +2220,9 @@ function BrandHeader({ theme, saveStatus }) {
           background: theme.primary, color: theme.primaryFg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: theme.fontHead, fontWeight: 900, fontSize: 14,
-        }}>주</div>
+        }}>✝</div>
         <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontWeight: 800, fontSize: 14, color: theme.text }}>
-          주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
+          찬양팀 로스터
         </div>
       </div>
       <div style={{
