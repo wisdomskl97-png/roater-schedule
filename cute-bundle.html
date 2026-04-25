@@ -2086,15 +2086,33 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
+function loadFromStorage(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch(e) { return fallback; }
+}
+function saveToStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+}
+
 function RosterApp({ theme: themeName = 'cute', iconPalette }) {
   const themeBase = THEMES[themeName];
   const theme = { ...themeBase, iconPalette: iconPalette || (themeName === 'bold' ? 'bold' : 'cute') };
 
-  const [members, setMembers] = useAppState(SEED_MEMBERS);
-  const [week, setWeek] = useAppState(SEED_WEEK);
+  const [members, setMembersRaw] = useAppState(() => loadFromStorage('roaster_members', SEED_MEMBERS));
+  const [week, setWeekRaw] = useAppState(() => loadFromStorage('roaster_week', SEED_WEEK));
   const [tab, setTab] = useAppState('week');
-  const [roster, setRoster] = useAppState(() => autoBuildRoster(SEED_MEMBERS, SEED_WEEK));
+  const [roster, setRosterRaw] = useAppState(() => {
+    const m = loadFromStorage('roaster_members', SEED_MEMBERS);
+    const w = loadFromStorage('roaster_week', SEED_WEEK);
+    return loadFromStorage('roaster_roster', autoBuildRoster(m, w));
+  });
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
+
+  function setMembers(v) { setMembersRaw(v); saveToStorage('roaster_members', v); }
+  function setWeek(v) { setWeekRaw(v); saveToStorage('roaster_week', v); }
+  function setRoster(v) { setRosterRaw(v); saveToStorage('roaster_roster', v); }
 
   function handleGenerate() {
     const r = autoBuildRoster(members, week);
