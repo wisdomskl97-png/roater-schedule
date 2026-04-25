@@ -1520,15 +1520,6 @@ function WeekScreen({ members, week, setWeek, theme, onGenerate }) {
       </div>
       </div>
 
-      {/* 고정 하단: 자동 생성 버튼 */}
-      <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${theme.border}`, background: theme.bg }}>
-        <Btn theme={theme} variant="primary" onClick={onGenerate} style={{
-          width: '100%', padding: '16px 20px', fontSize: 17, fontWeight: 800,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}>
-          <span style={{ fontSize: 22 }}>🎰</span> 로스터 자동 생성
-        </Btn>
-      </div>
     </div>
   );
 }
