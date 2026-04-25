@@ -2082,6 +2082,15 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
+// ── localStorage 백업 (저장 버튼 클릭 시에만 씀 — 자동저장 아님) ──
+const LS_KEY = 'roster_save_v1';
+function lsRead() {
+  try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function lsWrite(data) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
 // ── Firestore 로드/저장 래퍼 ──────────────────────────────
 function AppLoader({ theme: themeName = 'cute', iconPalette }) {
   const [ready, setReady] = React.useState(false);
@@ -2092,11 +2101,27 @@ function AppLoader({ theme: themeName = 'cute', iconPalette }) {
       .then(snap => {
         if (snap.exists()) {
           const d = snap.data();
-          setInitData({ members: d.members, week: d.week, roster: d.roster });
+          if (d.members) {
+            const data = { members: d.members, week: d.week, roster: d.roster };
+            setInitData(data);
+          } else {
+            // Firestore 문서는 있지만 members 필드 없음 → localStorage fallback
+            const local = lsRead();
+            if (local) setInitData(local);
+          }
+        } else {
+          // Firestore 문서 없음 → localStorage fallback
+          const local = lsRead();
+          if (local) setInitData(local);
         }
         setReady(true);
       })
-      .catch(() => setReady(true));
+      .catch(() => {
+        // Firestore 읽기 실패 → localStorage fallback
+        const local = lsRead();
+        if (local) setInitData(local);
+        setReady(true);
+      });
   }, []);
 
   if (!ready) {
@@ -2127,8 +2152,11 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
 
   function handleSave() {
     setSaveStatus('saving');
-    window.FSDOC.set({ members, week, roster })
+    const data = { members, week, roster };
+    window.FSDOC.set(data)
       .then(() => {
+        // Firestore 저장 성공 시 localStorage에도 백업 (같은 기기 refresh 대비)
+        lsWrite(data);
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2000);
       })
