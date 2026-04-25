@@ -1545,8 +1545,15 @@ function WeekScreen({ members, week, setWeek, theme, onGenerate }) {
               display: 'flex', alignItems: 'center', gap: 10,
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{m.name}</div>
-                <div style={{ fontSize: 11, color: theme.textMuted }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, fontSize: 15 }}>{m.name}</span>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {m.instruments.map(iid => (
+                      <InstrumentIcon key={iid} id={iid} size={15} paletteName={theme.iconPalette || 'cute'} />
+                    ))}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
                   {overridden ? '✏️ 이번 주 변경됨' : `기본: ${m.defaultService === 'both' ? '둘 다' : m.defaultService === 'first' ? '2부' : '3부'}`}
                 </div>
               </div>
@@ -1783,13 +1790,6 @@ function RosterScreen({ members, week, roster, setRoster, theme, animateOnMount,
             </div>
           </div>
         }
-      </div>
-
-      {/* 고정 하단: 재생성 버튼 */}
-      <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${theme.border}`, background: theme.bg }}>
-        <Btn theme={theme} variant="outline" onClick={regenerate} style={{ width: '100%' }} disabled={animating}>
-          🎲 다시 돌리기
-        </Btn>
       </div>
 
       {/* 멤버 선택 시트 */}
