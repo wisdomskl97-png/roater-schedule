@@ -2102,63 +2102,76 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
-function loadLS(key, fallback) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-  catch(e) { return fallback; }
-}
 function saveLS(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
 }
 
-function RosterApp({ theme: themeName = 'cute', iconPalette }) {
+function AppLoader({ theme: themeName = 'cute', iconPalette }) {
+  const [ready, setReady] = React.useState(false);
+  const [initData, setInitData] = React.useState(null);
+
+  React.useEffect(() => {
+    // 항상 Firestore에서 최신 데이터를 먼저 가져옴
+    window.FSDOC.get().then(snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setInitData({ members: d.members, week: d.week, roster: d.roster });
+      }
+      setReady(true);
+    }).catch(() => setReady(true)); // 오류 시에도 앱 실행
+  }, []);
+
+  if (!ready) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#FFF7F9', flexDirection: 'column', gap: 12 }}>
+        <div style={{ fontSize: 32 }}>🌸</div>
+        <div style={{ fontSize: 14, color: '#9F6B82', fontWeight: 600 }}>불러오는 중...</div>
+      </div>
+    );
+  }
+  return <RosterApp theme={themeName} iconPalette={iconPalette} initData={initData} />;
+}
+
+function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   const themeBase = THEMES[themeName];
   const theme = { ...themeBase, iconPalette: iconPalette || (themeName === 'bold' ? 'bold' : 'cute') };
 
-  // localStorage를 캐시로 사용해 빠르게 초기 렌더링
-  const [members, setMembersState] = useAppState(() => loadLS('roaster_members', SEED_MEMBERS));
-  const [week, setWeekState] = useAppState(() => loadLS('roaster_week', SEED_WEEK));
+  const [members, setMembersState] = useAppState(() => initData?.members || SEED_MEMBERS);
+  const [week, setWeekState] = useAppState(() => initData?.week || SEED_WEEK);
   const [tab, setTab] = useAppState('week');
   const [roster, setRosterState] = useAppState(() => {
-    const m = loadLS('roaster_members', SEED_MEMBERS);
-    const w = loadLS('roaster_week', SEED_WEEK);
-    return loadLS('roaster_roster', autoBuildRoster(m, w));
+    if (initData?.roster) return initData.roster;
+    return autoBuildRoster(initData?.members || SEED_MEMBERS, initData?.week || SEED_WEEK);
   });
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
-  const [cloudStatus, setCloudStatus] = useAppState('loading'); // 'loading' | 'synced' | 'error'
+  const [cloudStatus, setCloudStatus] = useAppState('synced');
 
-  // 최신 state를 ref로 추적 (클로저 문제 방지)
+  // 최신 state를 ref로 추적
   const latestRef = React.useRef({ members, week, roster });
   React.useEffect(() => { latestRef.current.members = members; }, [members]);
   React.useEffect(() => { latestRef.current.week = week; }, [week]);
   React.useEffect(() => { latestRef.current.roster = roster; }, [roster]);
 
-  const isRemoteUpdate = React.useRef(false);
-
-  // Firestore 실시간 리스너 — 마운트 시 한 번만 등록
+  // 실시간 리스너 — 다른 기기 변경사항 반영
   React.useEffect(() => {
     const unsub = window.FSDOC.onSnapshot(snap => {
-      if (snap.exists()) {
-        const data = snap.data();
-        isRemoteUpdate.current = true;
-        if (data.members) { setMembersState(data.members); saveLS('roaster_members', data.members); }
-        if (data.week)    { setWeekState(data.week);       saveLS('roaster_week', data.week); }
-        if (data.roster)  { setRosterState(data.roster);   saveLS('roaster_roster', data.roster); }
-        isRemoteUpdate.current = false;
-        setCloudStatus('synced');
-      } else {
-        // 첫 접속 — 로컬 데이터를 Firestore에 업로드
-        const { members: m, week: w, roster: r } = latestRef.current;
-        window.FSDOC.set({ members: m, week: w, roster: r });
-        setCloudStatus('synced');
-      }
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (d.members) setMembersState(d.members);
+      if (d.week)    setWeekState(d.week);
+      if (d.roster)  setRosterState(d.roster);
+      setCloudStatus('synced');
     }, () => setCloudStatus('error'));
     return () => unsub();
   }, []);
 
-  // Firestore에 전체 상태 저장
+  // Firestore 저장
   function pushToCloud(m, w, r) {
-    if (isRemoteUpdate.current) return;
-    window.FSDOC.set({ members: m, week: w, roster: r }).catch(() => setCloudStatus('error'));
+    setCloudStatus('saving');
+    window.FSDOC.set({ members: m, week: w, roster: r })
+      .then(() => setCloudStatus('synced'))
+      .catch(() => setCloudStatus('error'));
   }
 
   function setMembers(v) {
@@ -2250,7 +2263,7 @@ const { useState, useEffect } = React;
 function Root() {
   return (
     <div style={{ height: '100vh', width: '100%' }}>
-      <RosterApp theme="cute" iconPalette="cute" />
+      <AppLoader theme="cute" iconPalette="cute" />
     </div>
   );
 }
