@@ -35,6 +35,22 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyAik9gfAeTPxyrxFFUMwzQ7BTY1gFtByjc",
+    authDomain: "roater-schedule.firebaseapp.com",
+    projectId: "roater-schedule",
+    storageBucket: "roater-schedule.firebasestorage.app",
+    messagingSenderId: "589070838782",
+    appId: "1:589070838782:web:7f9a9e4c9a5c3f51c92eaf"
+  });
+  window.FSDB = firebase.firestore();
+  window.FSDOC = window.FSDB.collection('roaster').doc('shared');
+</script>
+
 <script>
 // 찬양팀 로스터 - 시드 데이터 + 자동생성 로직
 
@@ -2086,13 +2102,11 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
-function loadFromStorage(key, fallback) {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  } catch(e) { return fallback; }
+function loadLS(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
 }
-function saveToStorage(key, value) {
+function saveLS(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
 }
 
@@ -2100,19 +2114,65 @@ function RosterApp({ theme: themeName = 'cute', iconPalette }) {
   const themeBase = THEMES[themeName];
   const theme = { ...themeBase, iconPalette: iconPalette || (themeName === 'bold' ? 'bold' : 'cute') };
 
-  const [members, setMembersRaw] = useAppState(() => loadFromStorage('roaster_members', SEED_MEMBERS));
-  const [week, setWeekRaw] = useAppState(() => loadFromStorage('roaster_week', SEED_WEEK));
+  // localStorage를 캐시로 사용해 빠르게 초기 렌더링
+  const [members, setMembersState] = useAppState(() => loadLS('roaster_members', SEED_MEMBERS));
+  const [week, setWeekState] = useAppState(() => loadLS('roaster_week', SEED_WEEK));
   const [tab, setTab] = useAppState('week');
-  const [roster, setRosterRaw] = useAppState(() => {
-    const m = loadFromStorage('roaster_members', SEED_MEMBERS);
-    const w = loadFromStorage('roaster_week', SEED_WEEK);
-    return loadFromStorage('roaster_roster', autoBuildRoster(m, w));
+  const [roster, setRosterState] = useAppState(() => {
+    const m = loadLS('roaster_members', SEED_MEMBERS);
+    const w = loadLS('roaster_week', SEED_WEEK);
+    return loadLS('roaster_roster', autoBuildRoster(m, w));
   });
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
+  const [cloudStatus, setCloudStatus] = useAppState('loading'); // 'loading' | 'synced' | 'error'
 
-  function setMembers(v) { setMembersRaw(v); saveToStorage('roaster_members', v); }
-  function setWeek(v) { setWeekRaw(v); saveToStorage('roaster_week', v); }
-  function setRoster(v) { setRosterRaw(v); saveToStorage('roaster_roster', v); }
+  // 최신 state를 ref로 추적 (클로저 문제 방지)
+  const latestRef = React.useRef({ members, week, roster });
+  React.useEffect(() => { latestRef.current.members = members; }, [members]);
+  React.useEffect(() => { latestRef.current.week = week; }, [week]);
+  React.useEffect(() => { latestRef.current.roster = roster; }, [roster]);
+
+  const isRemoteUpdate = React.useRef(false);
+
+  // Firestore 실시간 리스너 — 마운트 시 한 번만 등록
+  React.useEffect(() => {
+    const unsub = window.FSDOC.onSnapshot(snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        isRemoteUpdate.current = true;
+        if (data.members) { setMembersState(data.members); saveLS('roaster_members', data.members); }
+        if (data.week)    { setWeekState(data.week);       saveLS('roaster_week', data.week); }
+        if (data.roster)  { setRosterState(data.roster);   saveLS('roaster_roster', data.roster); }
+        isRemoteUpdate.current = false;
+        setCloudStatus('synced');
+      } else {
+        // 첫 접속 — 로컬 데이터를 Firestore에 업로드
+        const { members: m, week: w, roster: r } = latestRef.current;
+        window.FSDOC.set({ members: m, week: w, roster: r });
+        setCloudStatus('synced');
+      }
+    }, () => setCloudStatus('error'));
+    return () => unsub();
+  }, []);
+
+  // Firestore에 전체 상태 저장
+  function pushToCloud(m, w, r) {
+    if (isRemoteUpdate.current) return;
+    window.FSDOC.set({ members: m, week: w, roster: r }).catch(() => setCloudStatus('error'));
+  }
+
+  function setMembers(v) {
+    setMembersState(v); saveLS('roaster_members', v);
+    pushToCloud(v, latestRef.current.week, latestRef.current.roster);
+  }
+  function setWeek(v) {
+    setWeekState(v); saveLS('roaster_week', v);
+    pushToCloud(latestRef.current.members, v, latestRef.current.roster);
+  }
+  function setRoster(v) {
+    setRosterState(v); saveLS('roaster_roster', v);
+    pushToCloud(latestRef.current.members, latestRef.current.week, v);
+  }
 
   function handleGenerate() {
     const r = autoBuildRoster(members, week);
@@ -2140,7 +2200,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette }) {
       position: 'relative',
     }}>
       {/* 상단 브랜드 바 */}
-      <BrandHeader theme={theme} themeName={themeName} />
+      <BrandHeader theme={theme} themeName={themeName} cloudStatus={cloudStatus} />
       {/* 컨텐츠 */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
@@ -2151,7 +2211,9 @@ function RosterApp({ theme: themeName = 'cute', iconPalette }) {
   );
 }
 
-function BrandHeader({ theme, themeName }) {
+function BrandHeader({ theme, themeName, cloudStatus }) {
+  const statusIcon = cloudStatus === 'synced' ? '☁️' : cloudStatus === 'error' ? '⚠️' : '⏳';
+  const statusTip  = cloudStatus === 'synced' ? '클라우드 저장됨' : cloudStatus === 'error' ? '저장 오류' : '연결 중...';
   return (
     <div style={{
       padding: '12px 20px 10px',
@@ -2171,12 +2233,10 @@ function BrandHeader({ theme, themeName }) {
           주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
         </div>
       </div>
-      {false && <div style={{
-        fontSize: 11, fontWeight: 700, color: theme.textMuted,
-        padding: '4px 8px', background: theme.surface,
-        borderRadius: theme.radius >= 16 ? 999 : 4,
-        border: `1px solid ${theme.border}`,
-      }}>{themeName === 'cute' ? 'soft' : 'bold'}</div>}
+      <div title={statusTip} style={{
+        fontSize: 13, cursor: 'default',
+        opacity: cloudStatus === 'synced' ? 0.5 : 1,
+      }}>{statusIcon}</div>
     </div>
   );
 }
