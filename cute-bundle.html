@@ -2166,6 +2166,36 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
       });
   }
 
+  // Firebase에서 최신 데이터 수동 불러오기
+  const [loadStatus, setLoadStatus] = useAppState('idle'); // 'idle' | 'loading' | 'loaded' | 'error'
+  function handleLoad() {
+    setLoadStatus('loading');
+    window.FSDOC.get()
+      .then(snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d.members) {
+            setMembers(d.members);
+            setWeek(d.week || SEED_WEEK);
+            setRoster(d.roster || {});
+            lsWrite({ members: d.members, week: d.week, roster: d.roster });
+            setLoadStatus('loaded');
+            setTimeout(() => setLoadStatus('idle'), 2000);
+          } else {
+            setLoadStatus('error');
+            setTimeout(() => setLoadStatus('idle'), 3000);
+          }
+        } else {
+          setLoadStatus('error');
+          setTimeout(() => setLoadStatus('idle'), 3000);
+        }
+      })
+      .catch(() => {
+        setLoadStatus('error');
+        setTimeout(() => setLoadStatus('idle'), 3000);
+      });
+  }
+
   function handleGenerate() {
     const r = autoBuildRoster(members, week);
     setRoster(r);
@@ -2186,7 +2216,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   return (
     <div style={{ width: '100%', height: '100%', background: theme.bg,
       display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-      <BrandHeader theme={theme} saveStatus={saveStatus} onSave={handleSave} />
+      <BrandHeader theme={theme} saveStatus={saveStatus} onSave={handleSave} loadStatus={loadStatus} onLoad={handleLoad} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
       </div>
@@ -2195,17 +2225,40 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   );
 }
 
-function BrandHeader({ theme, saveStatus, onSave }) {
+function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad }) {
   const saving  = saveStatus === 'saving';
   const saved   = saveStatus === 'saved';
-  const errored = saveStatus === 'error';
+  const saveErr = saveStatus === 'error';
 
-  const btnLabel = saving ? '저장 중…' : saved ? '✓ 저장됨' : errored ? '⚠ 오류' : '☁ 저장';
-  const btnBg    = saved ? '#10B981' : errored ? '#EF4444' : theme.primary;
+  const loading = loadStatus === 'loading';
+  const loaded  = loadStatus === 'loaded';
+  const loadErr = loadStatus === 'error';
+
+  const saveBtnLabel = saving ? '저장 중…' : saved ? '✓ 저장됨' : saveErr ? '⚠ 오류' : '☁ 저장';
+  const saveBtnBg    = saved ? '#10B981' : saveErr ? '#EF4444' : theme.primary;
+
+  const loadBtnLabel = loading ? '불러오는 중…' : loaded ? '✓ 불러옴' : loadErr ? '⚠ 오류' : '↓ 불러오기';
+  const loadBtnBg    = loaded ? '#10B981' : loadErr ? '#EF4444' : '#fff';
+  const loadBtnColor = loaded || loadErr ? '#fff' : theme.primary;
+
+  const btnStyle = (bg, color, disabled) => ({
+    border: `1.5px solid ${color === '#fff' ? theme.primary : 'transparent'}`,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    background: bg,
+    color: color,
+    borderRadius: 999,
+    padding: '5px 12px',
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: theme.fontBody,
+    opacity: disabled ? 0.7 : 1,
+    transition: 'background 0.2s',
+    whiteSpace: 'nowrap',
+  });
 
   return (
     <div style={{
-      padding: '10px 16px',
+      padding: '10px 12px',
       background: theme.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       borderBottom: `1px solid ${theme.border}`,
@@ -2221,19 +2274,16 @@ function BrandHeader({ theme, saveStatus, onSave }) {
           주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
         </div>
       </div>
-      <button onClick={onSave} disabled={saving}
-        style={{
-          border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
-          background: btnBg, color: '#fff',
-          borderRadius: 999, padding: '6px 14px',
-          fontSize: 13, fontWeight: 700,
-          fontFamily: theme.fontBody,
-          opacity: saving ? 0.7 : 1,
-          transition: 'background 0.2s',
-          boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
-        }}>
-        {btnLabel}
-      </button>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={onLoad} disabled={loading || saving}
+          style={btnStyle(loadBtnBg, loadBtnColor, loading || saving)}>
+          {loadBtnLabel}
+        </button>
+        <button onClick={onSave} disabled={saving || loading}
+          style={{ ...btnStyle(saveBtnBg, '#fff', saving || loading), boxShadow: '0 2px 8px rgba(236,72,153,0.2)' }}>
+          {saveBtnLabel}
+        </button>
+      </div>
     </div>
   );
 }
