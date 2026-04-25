@@ -2022,10 +2022,10 @@ function SummarySheet({ theme, members, week, roster, sameLeader, onClose }) {
     lines.push(`2부/3부 인도자: ${sameLeader ? '같음' : '다름'}`);
     lines.push('');
     lines.push('2부');
-    INSTRUMENTS.forEach(i => lines.push(`${i.label}: ${nameOf(roster.first[i.id])}`));
+    INSTRUMENTS.forEach(i => { if (roster.first[i.id]) lines.push(`${i.label}: ${nameOf(roster.first[i.id])}`); });
     lines.push('');
     lines.push('3부');
-    INSTRUMENTS.forEach(i => lines.push(`${i.label}: ${nameOf(roster.second[i.id])}`));
+    INSTRUMENTS.forEach(i => { if (roster.second[i.id]) lines.push(`${i.label}: ${nameOf(roster.second[i.id])}`); });
     return lines.join('\n');
   }, [roster, members, week, sameLeader]);
 
