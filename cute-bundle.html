@@ -134,12 +134,29 @@ function buildServiceRoster(members, week, service, preferred = {}, recentCounts
       return a.instruments.length - b.instruments.length;
     });
 
+    // 드럼-카혼 규칙: 드럼이 이미 배정됐으면 카혼 슬롯은 비움 (역도 동일)
+    if (inst.id === 'cajon' && result['drum']) {
+      result['cajon'] = null;
+      continue;
+    }
+    if (inst.id === 'drum' && result['cajon']) {
+      result['drum'] = null;
+      continue;
+    }
+
     if (pool.length > 0) {
       result[inst.id] = pool[0].id;
       used.add(pool[0].id);
     } else {
       result[inst.id] = null;
     }
+  }
+
+  // 혹시 preferred 단계에서 둘 다 들어온 경우 드럼 우선으로 정리
+  if (result['drum'] && result['cajon']) {
+    const cajMid = result['cajon'];
+    result['cajon'] = null;
+    used.delete(cajMid);
   }
 
   return result;
