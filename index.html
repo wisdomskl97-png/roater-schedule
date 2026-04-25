@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>찬양팀 로스터 · 주안교회</title>
+<title>찬양팀 로스터 · Soft & Cute</title>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
     font-family: 'Apple SD Gothic Neo', -apple-system, system-ui, sans-serif;
-    background: #ECECEE;
-    overflow: hidden;
+    background: linear-gradient(180deg, #FFF0F5 0%, #FFE4EC 100%);
+    overflow: auto;
   }
   * { -webkit-font-smoothing: antialiased; }
   @keyframes slideUp {
@@ -24,146 +24,2153 @@
     0%, 100% { transform: rotate(-2deg) scale(1.02); }
     50% { transform: rotate(2deg) scale(1.05); }
   }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-  }
   input, button { font-family: inherit; }
   ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
 </head>
 <body>
-<div id="root" style="width:100%;height:100%;"></div>
+<div id="root"></div>
 
-<template id="__bundler_thumbnail" data-bg-color="#ECECEE">
-  <svg viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
-    <!-- iPhone 모양 실루엣 -->
-    <rect x="120" y="80" width="360" height="640" rx="56" ry="56" fill="#1a1a1a"/>
-    <rect x="138" y="98" width="324" height="604" rx="42" ry="42" fill="#FFF6E5"/>
-    <!-- notch -->
-    <rect x="252" y="118" width="96" height="22" rx="11" ry="11" fill="#1a1a1a"/>
-    <!-- 헤더 칩 -->
-    <rect x="170" y="180" width="220" height="36" rx="18" ry="18" fill="#FFD93D"/>
-    <!-- 카드 1 (피아노) -->
-    <rect x="170" y="248" width="260" height="88" rx="20" ry="20" fill="#FF6B6B"/>
-    <rect x="190" y="280" width="60" height="24" rx="3" ry="3" fill="#fff"/>
-    <rect x="194" y="280" width="4" height="14" fill="#1a1a1a"/>
-    <rect x="206" y="280" width="4" height="14" fill="#1a1a1a"/>
-    <rect x="218" y="280" width="4" height="14" fill="#1a1a1a"/>
-    <rect x="230" y="280" width="4" height="14" fill="#1a1a1a"/>
-    <rect x="242" y="280" width="4" height="14" fill="#1a1a1a"/>
-    <!-- 카드 2 (드럼) -->
-    <rect x="170" y="352" width="260" height="88" rx="20" ry="20" fill="#4ECDC4"/>
-    <circle cx="220" cy="396" r="22" fill="#fff"/>
-    <circle cx="220" cy="396" r="14" fill="#1a1a1a"/>
-    <!-- 카드 3 (기타) -->
-    <rect x="170" y="456" width="260" height="88" rx="20" ry="20" fill="#A78BFA"/>
-    <circle cx="220" cy="500" r="20" fill="#fff"/>
-    <rect x="240" y="494" width="80" height="12" rx="6" ry="6" fill="#fff"/>
-    <!-- 하단 탭 -->
-    <rect x="170" y="616" width="64" height="64" rx="20" ry="20" fill="#1a1a1a"/>
-    <rect x="244" y="616" width="64" height="64" rx="20" ry="20" fill="#FFD93D"/>
-    <rect x="318" y="616" width="64" height="64" rx="20" ry="20" fill="#1a1a1a"/>
-  </svg>
-</template>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>
+// 찬양팀 로스터 - 시드 데이터 + 자동생성 로직
 
-<!-- 데이터/로직 -->
-<script src="data.js?v=8"></script>
+const INSTRUMENTS = [
+  { id: 'mainKey',   label: '메인건반',   short: '메인',   en: 'Main Keys',    hue: 280 },
+  { id: 'secondKey', label: '세컨건반',   short: '세컨',   en: 'Second Keys',  hue: 200 },
+  { id: 'bass',      label: '베이스',     short: '베이스', en: 'Bass',         hue: 30  },
+  { id: 'guitar',    label: '일렉기타',   short: '일렉',   en: 'E. Guitar',    hue: 350 },
+  { id: 'acoustic',  label: '어쿠스틱기타', short: '어쿠',   en: 'A. Guitar',    hue: 50  },
+  { id: 'drum',      label: '드럼',       short: '드럼',   en: 'Drums',        hue: 140 },
+  { id: 'cajon',     label: '카혼',       short: '카혼',   en: 'Cajón',        hue: 20  },
+  { id: 'violin',    label: '바이올린',   short: '바이올린', en: 'Violin',       hue: 320 },
+];
 
-<!-- 일러스트 + 컴포넌트 -->
-<script type="text/babel" src="instruments.jsx?v=8"></script>
-<script type="text/babel" src="ios-frame.jsx"></script>
-<script type="text/babel" src="design-canvas.jsx"></script>
-<script type="text/babel" src="tweaks-panel.jsx"></script>
-<script type="text/babel" src="app-shell.jsx"></script>
-<script type="text/babel" src="screen-members.jsx"></script>
-<script type="text/babel" src="screen-week.jsx"></script>
-<script type="text/babel" src="screen-roster.jsx?v=9"></script>
-<script type="text/babel" src="app.jsx"></script>
+// 8~12명 가상 멤버 (한국 이름)
+const SEED_MEMBERS = [
+  { id: 'm1',  name: '김민수', instruments: ['mainKey', 'secondKey'],     defaultService: 'both',     active: true,  note: '' },
+  { id: 'm2',  name: '박서연', instruments: ['secondKey', 'guitar'],      defaultService: 'both',     active: true,  note: '' },
+  { id: 'm3',  name: '이지훈', instruments: ['drum', 'cajon'],            defaultService: 'second',   active: true,  note: '3부만' },
+  { id: 'm4',  name: '최민재', instruments: ['guitar', 'bass'],           defaultService: 'both',     active: true,  note: '' },
+  { id: 'm5',  name: '정하은', instruments: ['mainKey', 'violin'],        defaultService: 'first',    active: true,  note: '2부 고정' },
+  { id: 'm6',  name: '이준호', instruments: ['bass', 'guitar'],           defaultService: 'both',     active: true,  note: '' },
+  { id: 'm7',  name: '한지원', instruments: ['secondKey', 'mainKey'],     defaultService: 'both',     active: true,  note: '' },
+  { id: 'm8',  name: '김도현', instruments: ['drum', 'cajon'],            defaultService: 'both',     active: true,  note: '' },
+  { id: 'm9',  name: '윤소정', instruments: ['acoustic', 'guitar'],       defaultService: 'second',   active: true,  note: '' },
+  { id: 'm10', name: '강태윤', instruments: ['drum'],                     defaultService: 'both',     active: true,  note: '' },
+  { id: 'm11', name: '서지안', instruments: ['mainKey', 'acoustic'],      defaultService: 'first',    active: true,  note: '' },
+  { id: 'm12', name: '오민혁', instruments: ['bass', 'cajon'],            defaultService: 'both',     active: false, note: '교환학생 휴식' },
+  { id: 'm13', name: '김예슬', instruments: ['violin'],                   defaultService: 'both',     active: true,  note: '' },
+  { id: 'm14', name: '박찬우', instruments: ['acoustic', 'cajon'],        defaultService: 'both',     active: true,  note: '' },
+];
+
+// 인도자 후보
+const LEADERS = ['박인도', '최인도', '정인도', '강인도'];
+
+// 이번 주 정보 (2026-05-03)
+const SEED_WEEK = {
+  date: '2026-05-03',
+  firstLeader: '박인도',
+  secondLeader: '박인도',
+  // availability: { memberId: { first: bool, second: bool, note: string } }
+  availability: {
+    m3: { first: false, second: true,  note: '오전 일정' },
+    m5: { first: true,  second: false, note: '' },
+    m9: { first: false, second: true,  note: '' },
+  },
+};
+
+// ─────────────────────────────────────────────────────────
+// 멤버가 해당 예배에 가능한지
+function canAttend(member, week, service /* 'first'|'second' */) {
+  if (!member.active) return false;
+  const ex = week.availability?.[member.id];
+  if (ex && typeof ex[service] === 'boolean') return ex[service];
+  // 기본값
+  if (member.defaultService === 'both') return true;
+  return member.defaultService === service;
+}
+
+// ─────────────────────────────────────────────────────────
+// 자동 생성: 한 예배(2부 또는 3부)의 로스터 만들기
+// preferred: { instrumentId: memberId } 우선 배치 (인도자 같음)
+// avoid: Set<memberId>             가능하면 피하기 (인도자 다름)
+function buildServiceRoster(members, week, service, preferred = {}, recentCounts = {}, avoid = null) {
+  const result = {};
+  const used = new Set();
+
+  // 1) preferred 먼저
+  for (const inst of INSTRUMENTS) {
+    const wantId = preferred[inst.id];
+    if (!wantId) continue;
+    const m = members.find(x => x.id === wantId);
+    if (!m) continue;
+    if (!canAttend(m, week, service)) continue;
+    if (!m.instruments.includes(inst.id)) continue;
+    if (used.has(m.id)) continue;
+    result[inst.id] = m.id;
+    used.add(m.id);
+  }
+
+  // 2) 비어있는 자리 채우기
+  for (const inst of INSTRUMENTS) {
+    if (result[inst.id]) continue;
+    const all = members
+      .filter(m => canAttend(m, week, service))
+      .filter(m => m.instruments.includes(inst.id))
+      .filter(m => !used.has(m.id));
+
+    // avoid 안 겹치는 후보 우선; 없으면 fallback
+    const fresh = avoid ? all.filter(m => !avoid.has(m.id)) : all;
+    const pool = fresh.length > 0 ? fresh : all;
+
+    pool.sort((a, b) => {
+      const ra = recentCounts[a.id] || 0;
+      const rb = recentCounts[b.id] || 0;
+      if (ra !== rb) return ra - rb;
+      return a.instruments.length - b.instruments.length;
+    });
+
+    if (pool.length > 0) {
+      result[inst.id] = pool[0].id;
+      used.add(pool[0].id);
+    } else {
+      result[inst.id] = null;
+    }
+  }
+
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────
+// 전체 자동 생성
+function autoBuildRoster(members, week, recentCounts = {}) {
+  const sameLeader = week.firstLeader && week.firstLeader === week.secondLeader;
+
+  // 2부 먼저
+  const first = buildServiceRoster(members, week, 'first', {}, recentCounts);
+
+  // 인도자 같음 → first와 최대한 같게 (preferred로 first 그대로 시도)
+  // 인도자 다름 → first에 배정된 사람 최대한 피하기 (avoid 세트)
+  const second = sameLeader
+    ? buildServiceRoster(members, week, 'second', first, recentCounts)
+    : buildServiceRoster(members, week, 'second', {}, recentCounts, new Set(Object.values(first).filter(Boolean)));
+
+  return { first, second };
+}
+
+// ─────────────────────────────────────────────────────────
+// 경고 검사
+function checkWarnings(roster, members, week) {
+  const warnings = []; // { service, instrument, memberId, type, msg }
+  for (const service of ['first', 'second']) {
+    const r = roster[service];
+    const seen = {};
+    for (const inst of INSTRUMENTS) {
+      const mid = r[inst.id];
+      if (!mid) {
+        warnings.push({ service, instrument: inst.id, type: 'empty', msg: `${service==='first'?'2부':'3부'} ${inst.label} 미배정` });
+        continue;
+      }
+      const m = members.find(x => x.id === mid);
+      if (!m) continue;
+      if (!m.active) {
+        warnings.push({ service, instrument: inst.id, memberId: mid, type: 'inactive', msg: `${m.name}은 비활성 멤버` });
+      }
+      if (!m.instruments.includes(inst.id)) {
+        warnings.push({ service, instrument: inst.id, memberId: mid, type: 'wrongInstrument', msg: `${m.name}은 ${inst.label} 가능 악기가 아님` });
+      }
+      if (!canAttend(m, week, service)) {
+        warnings.push({ service, instrument: inst.id, memberId: mid, type: 'unavailable', msg: `${m.name}은 ${service==='first'?'2부':'3부'} 불가능` });
+      }
+      if (seen[mid]) {
+        warnings.push({ service, instrument: inst.id, memberId: mid, type: 'duplicate', msg: `${m.name} 중복 배정` });
+      }
+      seen[mid] = true;
+    }
+  }
+  return warnings;
+}
+
+Object.assign(window, {
+  INSTRUMENTS, SEED_MEMBERS, SEED_WEEK, LEADERS,
+  canAttend, buildServiceRoster, autoBuildRoster, checkWarnings,
+});
+
+// touch 1777114825215</script>
+<script type="text/babel" data-presets="env,react">
+// 아이소메트릭 악기 일러스트 (SVG)
+// 단순화된 아이소메트릭 스타일 - 30도 각도, 부드러운 그림자, 단색 면
+// 각 컴포넌트는 size prop을 받음
+
+function IsoMainKey({ size = 80, palette }) {
+  const c = palette || { top: '#E8D5FF', front: '#A78BFA', side: '#7C3AED', shadow: '#5B21B6', dark: '#1F1532', accent: '#FCD34D' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: 'block' }}>
+      {/* shadow */}
+      <ellipse cx="50" cy="86" rx="32" ry="5" fill="rgba(0,0,0,0.18)" />
+      {/* keyboard body — 아이소메트릭 박스 */}
+      {/* 옆면 (오른쪽) */}
+      <polygon points="78,42 78,58 90,52 90,36" fill={c.side} />
+      {/* 앞면 */}
+      <polygon points="14,52 78,58 78,42 14,36" fill={c.front} />
+      {/* 윗면 */}
+      <polygon points="14,36 78,42 90,36 26,30" fill={c.top} />
+      {/* 흰건반 라인 (윗면) */}
+      {[0,1,2,3,4,5,6,7,8,9].map(i => (
+        <line key={i}
+          x1={20 + i*6} y1={32 + i*0.6}
+          x2={32 + i*6} y2={26 + i*0.6}
+          stroke={c.dark} strokeOpacity="0.15" strokeWidth="0.5" />
+      ))}
+      {/* 검은건반 (윗면) */}
+      {[1,2,4,5,6].map((g, i) => (
+        <polygon key={i}
+          points={`${22 + g*6},${30.5 + g*0.6} ${28 + g*6},${27.5 + g*0.6} ${30 + g*6},${28.5 + g*0.6} ${24 + g*6},${31.5 + g*0.6}`}
+          fill={c.dark} />
+      ))}
+      {[8,9].map((g, i) => (
+        <polygon key={`b${i}`}
+          points={`${22 + g*6},${30.5 + g*0.6} ${28 + g*6},${27.5 + g*0.6} ${30 + g*6},${28.5 + g*0.6} ${24 + g*6},${31.5 + g*0.6}`}
+          fill={c.dark} />
+      ))}
+      {/* 디스플레이 점 */}
+      <circle cx="22" cy="38" r="1.2" fill={c.accent} />
+      <circle cx="26" cy="38.5" r="1.2" fill={c.accent} opacity="0.5" />
+    </svg>
+  );
+}
+
+function IsoSecondKey({ size = 80, palette }) {
+  const c = palette || { top: '#CCEBFF', front: '#60A5FA', side: '#2563EB', shadow: '#1E3A8A', dark: '#0F172A', accent: '#F472B6' };
+  // 더 작고 짧은 키보드
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="84" rx="28" ry="4.5" fill="rgba(0,0,0,0.18)" />
+      <polygon points="72,46 72,60 84,54 84,40" fill={c.side} />
+      <polygon points="20,55 72,60 72,46 20,41" fill={c.front} />
+      <polygon points="20,41 72,46 84,40 32,35" fill={c.top} />
+      {/* 검은 건반 군데군데 */}
+      {[1,3,5,7].map(i => (
+        <polygon key={i}
+          points={`${26 + i*5.5},${36 + i*0.5} ${30 + i*5.5},${33.5 + i*0.5} ${32 + i*5.5},${34.5 + i*0.5} ${28 + i*5.5},${37 + i*0.5}`}
+          fill={c.dark} />
+      ))}
+      {/* 화이트 라인 */}
+      {[0,1,2,3,4,5,6,7,8].map(i => (
+        <line key={`w${i}`}
+          x1={26 + i*5.5} y1={36.5 + i*0.5}
+          x2={36 + i*5.5} y2={32 + i*0.5}
+          stroke={c.dark} strokeOpacity="0.12" strokeWidth="0.4" />
+      ))}
+      {/* 모듈러 휠 */}
+      <rect x="20" y="44" width="6" height="10" fill={c.shadow} rx="1"/>
+    </svg>
+  );
+}
+
+function IsoBass({ size = 80, palette }) {
+  const c = palette || { body: '#FB923C', side: '#C2410C', neck: '#FDE68A', dark: '#451A03', shadow: '#7C2D12', string: '#FAFAF9' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="86" rx="34" ry="5" fill="rgba(0,0,0,0.2)" />
+      {/* 넥 */}
+      <polygon points="14,28 22,22 78,55 70,61" fill={c.neck} />
+      <polygon points="78,55 82,52 76,72 70,61" fill={c.side} />
+      {/* 헤드스톡 */}
+      <polygon points="10,30 18,24 22,22 14,28" fill={c.dark} />
+      <circle cx="13" cy="27" r="1" fill={c.shadow} />
+      <circle cx="16" cy="25" r="1" fill={c.shadow} />
+      <circle cx="19" cy="23" r="1" fill={c.shadow} />
+      {/* 바디 (둥근 형태 - polygon 근사) */}
+      <polygon points="56,52 78,52 92,60 88,72 80,80 60,82 50,76 48,64 50,56" fill={c.body} />
+      <polygon points="92,60 96,58 92,72 88,72" fill={c.side} />
+      <polygon points="60,82 56,84 48,76 50,76" fill={c.shadow} opacity="0.6"/>
+      {/* 픽업 */}
+      <polygon points="62,62 72,66 70,72 60,68" fill={c.dark} />
+      {/* 줄 */}
+      {[0,1,2,3].map(i => (
+        <line key={i} x1={20 - i*0.4} y1={26 + i*0.6} x2={70 - i*0.4} y2={59 + i*0.6} stroke={c.string} strokeWidth="0.4" opacity="0.7" />
+      ))}
+      {/* 컨트롤 노브 */}
+      <circle cx="78" cy="74" r="2" fill={c.dark} />
+      <circle cx="84" cy="71" r="2" fill={c.dark} />
+    </svg>
+  );
+}
+
+function IsoGuitar({ size = 80, palette }) {
+  const c = palette || { body: '#F87171', side: '#991B1B', neck: '#92400E', dark: '#1C1917', pickguard: '#FAFAF9', accent: '#FBBF24' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="86" rx="34" ry="5" fill="rgba(0,0,0,0.2)" />
+      {/* 넥 */}
+      <polygon points="12,32 20,26 76,52 68,58" fill={c.neck} />
+      <polygon points="76,52 80,50 74,68 68,58" fill={c.dark} opacity="0.5"/>
+      {/* 헤드 */}
+      <polygon points="8,34 16,28 22,30 14,36" fill={c.dark} />
+      {/* 일렉기타 바디 (스트랫 스타일) */}
+      <polygon points="56,50 76,48 90,55 92,68 86,78 76,80 64,82 52,78 46,68 48,58" fill={c.body} />
+      <polygon points="90,55 94,54 88,75 86,78 92,68" fill={c.side} />
+      {/* 픽가드 */}
+      <polygon points="62,58 78,58 82,68 76,76 64,74 60,68" fill={c.pickguard} />
+      {/* 픽업 3개 */}
+      <rect x="64" y="62" width="12" height="2.5" fill={c.dark} transform="rotate(8 70 63)" />
+      <rect x="64" y="67" width="12" height="2.5" fill={c.dark} transform="rotate(8 70 68)" />
+      <rect x="64" y="72" width="12" height="2.5" fill={c.dark} transform="rotate(8 70 73)" />
+      {/* 노브 */}
+      <circle cx="80" cy="72" r="1.5" fill={c.accent} />
+      <circle cx="83" cy="68" r="1.5" fill={c.accent} />
+    </svg>
+  );
+}
+
+function IsoDrum({ size = 80, palette }) {
+  const c = palette || { kick: '#34D399', skin: '#FEF3C7', side: '#047857', shell: '#065F46', cymbal: '#FCD34D', cymbalEdge: '#92400E', stand: '#1F2937' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="88" rx="38" ry="5" fill="rgba(0,0,0,0.2)" />
+      {/* 킥 드럼 (큰 원통) */}
+      <ellipse cx="50" cy="74" rx="22" ry="7" fill={c.side} />
+      <rect x="28" y="60" width="44" height="14" fill={c.kick} />
+      <ellipse cx="50" cy="60" rx="22" ry="7" fill={c.skin} />
+      <ellipse cx="50" cy="60" rx="22" ry="7" fill="none" stroke={c.shell} strokeWidth="1.5" />
+      {/* 러그 */}
+      {[0,1,2,3,4,5].map(i => {
+        const angle = (i / 6) * Math.PI;
+        const x = 50 + Math.cos(angle) * 22;
+        const y = 60 + Math.sin(angle) * 7;
+        return <circle key={i} cx={x} cy={y} r="0.8" fill={c.shell} />;
+      })}
+      {/* 탐 (위 작은 드럼) */}
+      <ellipse cx="36" cy="48" rx="9" ry="3" fill={c.side} />
+      <rect x="27" y="42" width="18" height="6" fill={c.kick} />
+      <ellipse cx="36" cy="42" rx="9" ry="3" fill={c.skin} />
+      <ellipse cx="36" cy="42" rx="9" ry="3" fill="none" stroke={c.shell} strokeWidth="1" />
+      {/* 탐2 */}
+      <ellipse cx="58" cy="46" rx="8" ry="2.5" fill={c.side} />
+      <rect x="50" y="41" width="16" height="5" fill={c.kick} />
+      <ellipse cx="58" cy="41" rx="8" ry="2.5" fill={c.skin} />
+      <ellipse cx="58" cy="41" rx="8" ry="2.5" fill="none" stroke={c.shell} strokeWidth="1" />
+      {/* 심벌 (왼쪽) */}
+      <line x1="20" y1="60" x2="20" y2="34" stroke={c.stand} strokeWidth="1.5" />
+      <ellipse cx="20" cy="32" rx="14" ry="3" fill={c.cymbal} />
+      <ellipse cx="20" cy="32" rx="14" ry="3" fill="none" stroke={c.cymbalEdge} strokeWidth="0.5" />
+      <circle cx="20" cy="32" r="1.5" fill={c.cymbalEdge} />
+      {/* 심벌 (오른쪽 위) */}
+      <line x1="78" y1="60" x2="78" y2="28" stroke={c.stand} strokeWidth="1.5" />
+      <ellipse cx="78" cy="26" rx="12" ry="2.5" fill={c.cymbal} />
+      <ellipse cx="78" cy="26" rx="12" ry="2.5" fill="none" stroke={c.cymbalEdge} strokeWidth="0.5" />
+      <circle cx="78" cy="26" r="1.2" fill={c.cymbalEdge} />
+    </svg>
+  );
+}
+
+function IsoAcoustic({ size = 80, palette }) {
+  const c = palette || { body: '#FCD34D', side: '#A16207', neck: '#92400E', dark: '#451A03', hole: '#1C1917', string: '#FAFAF9', accent: '#7C2D12' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="86" rx="34" ry="5" fill="rgba(0,0,0,0.2)" />
+      {/* 넥 */}
+      <polygon points="14,30 22,24 70,52 62,58" fill={c.neck} />
+      <polygon points="70,52 74,50 68,66 62,58" fill={c.dark} opacity="0.4"/>
+      {/* 헤드스톡 */}
+      <polygon points="9,32 17,26 22,28 14,34" fill={c.dark} />
+      <circle cx="12" cy="29" r="0.7" fill={c.accent} />
+      <circle cx="15" cy="27" r="0.7" fill={c.accent} />
+      {/* 어쿠스틱 바디 (둥근 8자 모양 근사) */}
+      <ellipse cx="74" cy="65" rx="20" ry="18" fill={c.body} />
+      <ellipse cx="74" cy="65" rx="20" ry="18" fill="none" stroke={c.side} strokeWidth="1.2" />
+      {/* 측면 그림자 */}
+      <path d="M 90 58 Q 96 65 90 76 Q 86 78 86 75 Q 92 66 88 58 Z" fill={c.side} opacity="0.5"/>
+      {/* 사운드홀 */}
+      <circle cx="68" cy="62" r="5" fill={c.hole} />
+      <circle cx="68" cy="62" r="5" fill="none" stroke={c.accent} strokeWidth="0.6" />
+      <circle cx="68" cy="62" r="3.2" fill="none" stroke={c.accent} strokeWidth="0.4" />
+      {/* 브릿지 */}
+      <rect x="73" y="70" width="11" height="2" fill={c.dark} transform="rotate(8 78 71)" />
+      {/* 줄 */}
+      {[0,1,2,3,4,5].map(i => (
+        <line key={i} x1={20 - i*0.3} y1={28 + i*0.5} x2={80 - i*0.3} y2={71 + i*0.5} stroke={c.string} strokeWidth="0.35" opacity="0.7" />
+      ))}
+    </svg>
+  );
+}
+
+function IsoCajon({ size = 80, palette }) {
+  const c = palette || { front: '#D97706', top: '#FCD34D', side: '#92400E', dark: '#451A03', hole: '#1C1917', accent: '#FBBF24' };
+  // 아이소메트릭 박스 (카혼 = 나무 박스)
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="86" rx="30" ry="4.5" fill="rgba(0,0,0,0.22)" />
+      {/* 윗면 */}
+      <polygon points="22,40 50,32 82,40 54,48" fill={c.top} />
+      {/* 앞면 (타파) */}
+      <polygon points="22,40 54,48 54,82 22,74" fill={c.front} />
+      {/* 옆면 */}
+      <polygon points="54,48 82,40 82,74 54,82" fill={c.side} />
+      {/* 나무 결 (앞면) */}
+      {[0,1,2].map(i => (
+        <line key={i} x1={26} y1={50 + i*8} x2={52} y2={56 + i*8} stroke={c.dark} strokeOpacity="0.18" strokeWidth="0.5" />
+      ))}
+      {/* 나무 결 (옆면) */}
+      {[0,1,2].map(i => (
+        <line key={`s${i}`} x1={58} y1={52 + i*8} x2={80} y2={48 + i*8} stroke={c.dark} strokeOpacity="0.15" strokeWidth="0.5" />
+      ))}
+      {/* 사운드홀 (옆면 가운데) */}
+      <ellipse cx="68" cy="62" rx="3.5" ry="4" fill={c.hole} />
+      {/* 모서리 강조 */}
+      <line x1="22" y1="40" x2="22" y2="74" stroke={c.dark} strokeOpacity="0.3" strokeWidth="0.6" />
+      <line x1="54" y1="48" x2="54" y2="82" stroke={c.dark} strokeOpacity="0.4" strokeWidth="0.7" />
+      {/* 코너 나사 */}
+      <circle cx="26" cy="44" r="0.8" fill={c.accent} />
+      <circle cx="50" cy="44" r="0.8" fill={c.accent} />
+      <circle cx="26" cy="71" r="0.8" fill={c.accent} />
+      <circle cx="50" cy="78" r="0.8" fill={c.accent} />
+    </svg>
+  );
+}
+
+function IsoViolin({ size = 80, palette }) {
+  const c = palette || { body: '#B45309', side: '#78350F', neck: '#1C1917', dark: '#0C0A09', string: '#FAFAF9', accent: '#FCD34D', f: '#1C1917' };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="86" rx="32" ry="4.5" fill="rgba(0,0,0,0.2)" />
+      {/* 활(bow) — 뒤쪽에 */}
+      <line x1="14" y1="26" x2="86" y2="74" stroke={c.dark} strokeWidth="1.2" />
+      <path d="M 14 26 Q 50 52 86 74" stroke={c.string} strokeWidth="0.6" fill="none" opacity="0.7"/>
+      {/* 넥 */}
+      <polygon points="22,32 28,26 64,52 58,58" fill={c.neck} />
+      {/* 스크롤(헤드) */}
+      <path d="M 22 32 Q 16 28 18 24 Q 22 22 24 26 L 28 26 Z" fill={c.dark} />
+      {/* 핑거보드 */}
+      <polygon points="28,32 32,28 60,50 56,54" fill={c.dark} opacity="0.85"/>
+      {/* 바이올린 바디 (둥근 8자) */}
+      <ellipse cx="68" cy="62" rx="16" ry="18" fill={c.body} transform="rotate(-25 68 62)" />
+      <ellipse cx="68" cy="62" rx="16" ry="18" fill="none" stroke={c.side} strokeWidth="1" transform="rotate(-25 68 62)" />
+      {/* 허리 잘록 (waist) */}
+      <ellipse cx="62" cy="56" rx="3" ry="5" fill={c.side} opacity="0.45" transform="rotate(-25 62 56)" />
+      {/* f-홀 두 개 */}
+      <path d="M 62 60 Q 60 64 62 68 Q 64 70 63 72" stroke={c.f} strokeWidth="1" fill="none" />
+      <path d="M 72 64 Q 70 68 72 72 Q 74 74 73 76" stroke={c.f} strokeWidth="1" fill="none" />
+      {/* 브릿지 */}
+      <rect x="64" y="66" width="10" height="1.5" fill={c.accent} transform="rotate(-25 69 66)" />
+      {/* 테일피스 */}
+      <polygon points="70,72 76,76 72,80 68,76" fill={c.dark} />
+      {/* 줄 (4개) */}
+      {[0,1,2,3].map(i => (
+        <line key={i} x1={26 + i*0.6} y1={28 + i*0.5} x2={70 + i*0.6} y2={70 + i*0.5} stroke={c.string} strokeWidth="0.3" opacity="0.8" />
+      ))}
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 컬러 팔레트별 매핑
+const ICON_PALETTES = {
+  cute: {
+    mainKey:   { top: '#FCE7F3', front: '#F9A8D4', side: '#DB2777', shadow: '#9D174D', dark: '#500724', accent: '#FCD34D' },
+    secondKey: { top: '#DBEAFE', front: '#93C5FD', side: '#3B82F6', shadow: '#1E3A8A', dark: '#172554', accent: '#FBBF24' },
+    bass:      { body: '#FED7AA', side: '#EA580C', neck: '#FEF3C7', dark: '#7C2D12', shadow: '#9A3412', string: '#FFFBEB' },
+    guitar:    { body: '#FECACA', side: '#DC2626', neck: '#A16207', dark: '#450A0A', pickguard: '#FFFBEB', accent: '#FBBF24' },
+    acoustic:  { body: '#FEF08A', side: '#A16207', neck: '#92400E', dark: '#451A03', hole: '#1C1917', string: '#FFFBEB', accent: '#7C2D12' },
+    drum:      { kick: '#A7F3D0', skin: '#FEF3C7', side: '#059669', shell: '#064E3B', cymbal: '#FCD34D', cymbalEdge: '#92400E', stand: '#1F2937' },
+    cajon:     { front: '#F59E0B', top: '#FCD34D', side: '#92400E', dark: '#451A03', hole: '#1C1917', accent: '#FBBF24' },
+    violin:    { body: '#C2410C', side: '#7C2D12', neck: '#1C1917', dark: '#0C0A09', string: '#FFFBEB', accent: '#FCD34D', f: '#1C1917' },
+  },
+  bold: {
+    mainKey:   { top: '#FAFAFA', front: '#000000', side: '#171717', shadow: '#0A0A0A', dark: '#FFFFFF', accent: '#FACC15' },
+    secondKey: { top: '#FAFAFA', front: '#FACC15', side: '#A16207', shadow: '#713F12', dark: '#000000', accent: '#000000' },
+    bass:      { body: '#FACC15', side: '#A16207', neck: '#1C1917', dark: '#000000', shadow: '#713F12', string: '#FFFFFF' },
+    guitar:    { body: '#000000', side: '#171717', neck: '#A16207', dark: '#FACC15', pickguard: '#FAFAFA', accent: '#FACC15' },
+    acoustic:  { body: '#FACC15', side: '#000000', neck: '#171717', dark: '#000000', hole: '#000000', string: '#FAFAFA', accent: '#000000' },
+    drum:      { kick: '#FAFAFA', skin: '#FACC15', side: '#525252', shell: '#000000', cymbal: '#FACC15', cymbalEdge: '#000000', stand: '#000000' },
+    cajon:     { front: '#000000', top: '#FACC15', side: '#171717', dark: '#000000', hole: '#FACC15', accent: '#FACC15' },
+    violin:    { body: '#000000', side: '#171717', neck: '#000000', dark: '#FACC15', string: '#FAFAFA', accent: '#FACC15', f: '#FACC15' },
+  },
+  neon: {
+    mainKey:   { top: '#F0ABFC', front: '#A855F7', side: '#6B21A8', shadow: '#3B0764', dark: '#0A0014', accent: '#22D3EE' },
+    secondKey: { top: '#67E8F9', front: '#06B6D4', side: '#0E7490', shadow: '#164E63', dark: '#000814', accent: '#F0ABFC' },
+    bass:      { body: '#F472B6', side: '#9D174D', neck: '#FCD34D', dark: '#1F0A1A', shadow: '#831843', string: '#22D3EE' },
+    guitar:    { body: '#22D3EE', side: '#0E7490', neck: '#1E1B4B', dark: '#0A0014', pickguard: '#F0ABFC', accent: '#FACC15' },
+    acoustic:  { body: '#FACC15', side: '#9D174D', neck: '#1E1B4B', dark: '#0A0014', hole: '#0A0014', string: '#22D3EE', accent: '#F0ABFC' },
+    drum:      { kick: '#A3E635', skin: '#F0ABFC', side: '#365314', shell: '#0A0014', cymbal: '#FACC15', cymbalEdge: '#9D174D', stand: '#1F0A1A' },
+    cajon:     { front: '#A855F7', top: '#FACC15', side: '#3B0764', dark: '#0A0014', hole: '#0A0014', accent: '#22D3EE' },
+    violin:    { body: '#F472B6', side: '#831843', neck: '#0A0014', dark: '#000814', string: '#22D3EE', accent: '#FACC15', f: '#0A0014' },
+  },
+};
+
+// 통합 아이콘 컴포넌트
+function InstrumentIcon({ id, size = 64, paletteName = 'cute' }) {
+  const pal = (ICON_PALETTES[paletteName] || ICON_PALETTES.cute)[id];
+  switch (id) {
+    case 'mainKey':   return <IsoMainKey   size={size} palette={pal} />;
+    case 'secondKey': return <IsoSecondKey size={size} palette={pal} />;
+    case 'bass':      return <IsoBass      size={size} palette={pal} />;
+    case 'guitar':    return <IsoGuitar    size={size} palette={pal} />;
+    case 'drum':      return <IsoDrum      size={size} palette={pal} />;
+    case 'acoustic':  return <IsoAcoustic  size={size} palette={pal} />;
+    case 'cajon':     return <IsoCajon     size={size} palette={pal} />;
+    case 'violin':    return <IsoViolin    size={size} palette={pal} />;
+    default: return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 추상 도형 버전 (palette toggle용)
+function AbstractIcon({ id, size = 64, paletteName = 'cute' }) {
+  const pal = (ICON_PALETTES[paletteName] || ICON_PALETTES.cute)[id];
+  const main = pal.front || pal.body || pal.kick;
+  const dark = pal.dark || pal.shadow;
+  const accent = pal.accent || pal.cymbal;
+  const shapes = {
+    mainKey: <>
+      <rect x="15" y="35" width="70" height="35" rx="4" fill={main} />
+      <rect x="15" y="35" width="70" height="6" fill={dark} opacity="0.3" />
+      {[20,30,40,50,60,70].map(x => <rect key={x} x={x} y="42" width="2" height="22" fill={dark} opacity="0.5" />)}
+      <circle cx="78" cy="48" r="2" fill={accent} />
+    </>,
+    secondKey: <>
+      <rect x="20" y="40" width="60" height="28" rx="4" fill={main} />
+      <rect x="20" y="40" width="60" height="5" fill={dark} opacity="0.3" />
+      {[26,34,42,50,58,66,74].map(x => <rect key={x} x={x} y="46" width="2" height="18" fill={dark} opacity="0.5" />)}
+    </>,
+    bass: <>
+      <rect x="14" y="48" width="50" height="3" fill={dark} />
+      <ellipse cx="74" cy="50" rx="14" ry="18" fill={main} />
+      <line x1="14" y1="49" x2="64" y2="49" stroke={accent || '#fff'} strokeWidth="0.5"/>
+      <circle cx="74" cy="50" r="3" fill={dark} />
+    </>,
+    guitar: <>
+      <rect x="14" y="48" width="50" height="3" fill={pal.neck || dark} />
+      <path d="M 64 35 Q 88 35 88 50 Q 88 70 70 70 Q 60 65 60 55 Q 58 50 64 45 Z" fill={main} />
+      <rect x="68" y="50" width="14" height="2" fill={dark} />
+      <rect x="68" y="56" width="14" height="2" fill={dark} />
+    </>,
+    drum: <>
+      <ellipse cx="50" cy="60" rx="30" ry="10" fill={pal.kick || main} />
+      <ellipse cx="50" cy="56" rx="30" ry="10" fill={pal.skin || '#FEF3C7'} />
+      <ellipse cx="50" cy="56" rx="30" ry="10" fill="none" stroke={pal.shell || dark} strokeWidth="1.5" />
+      <circle cx="20" cy="35" r="14" fill={accent} opacity="0.9" />
+      <circle cx="20" cy="35" r="2" fill={dark} />
+    </>,
+    acoustic: <>
+      <rect x="14" y="48" width="46" height="3" fill={pal.neck || dark} />
+      <ellipse cx="70" cy="55" rx="18" ry="20" fill={pal.body || main} />
+      <ellipse cx="70" cy="55" rx="18" ry="20" fill="none" stroke={pal.side || dark} strokeWidth="1" />
+      <circle cx="66" cy="55" r="5" fill={pal.hole || dark} />
+      <rect x="72" y="60" width="10" height="1.5" fill={dark} />
+    </>,
+    cajon: <>
+      <rect x="28" y="30" width="44" height="50" rx="3" fill={pal.front || main} />
+      <rect x="28" y="30" width="44" height="6" fill={pal.top || accent} />
+      <ellipse cx="50" cy="55" rx="3.5" ry="4.5" fill={pal.hole || dark} />
+      {[34,42,50,58,66,74].map(y => <line key={y} x1="32" y1={y} x2="68" y2={y} stroke={dark} strokeOpacity="0.18" strokeWidth="0.5" />)}
+    </>,
+    violin: <>
+      <line x1="18" y1="30" x2="82" y2="68" stroke={dark} strokeWidth="1" />
+      <ellipse cx="68" cy="58" rx="16" ry="20" fill={pal.body || main} transform="rotate(-20 68 58)" />
+      <ellipse cx="62" cy="54" rx="3" ry="5" fill={pal.side || dark} opacity="0.45" transform="rotate(-20 62 54)" />
+      <path d="M 62 56 Q 60 60 62 64" stroke={pal.f || dark} strokeWidth="1" fill="none" />
+      <path d="M 72 60 Q 70 64 72 68" stroke={pal.f || dark} strokeWidth="1" fill="none" />
+      <rect x="22" y="36" width="36" height="3" fill={pal.neck || dark} transform="rotate(35 40 38)"/>
+    </>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <ellipse cx="50" cy="82" rx="32" ry="4" fill="rgba(0,0,0,0.15)" />
+      {shapes[id]}
+    </svg>
+  );
+}
+
+Object.assign(window, { InstrumentIcon, AbstractIcon, ICON_PALETTES });
+</script>
+<script type="text/babel" data-presets="env,react">
+
+// iOS.jsx — Simplified iOS 26 (Liquid Glass) device frame
+// Based on the iOS 26 UI Kit + Figma status bar spec. No assets, no deps.
+// Exports: IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard
+
+// ─────────────────────────────────────────────────────────────
+// Status bar
+// ─────────────────────────────────────────────────────────────
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Liquid glass pill — blur + tint + shine
+// ─────────────────────────────────────────────────────────────
+function IOSGlassPill({ children, dark = false, style = {} }) {
+  return (
+    <div style={{
+      height: 44, minWidth: 44, borderRadius: 9999,
+      position: 'relative', overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: dark
+        ? '0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.2)'
+        : '0 1px 3px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.06)',
+      ...style,
+    }}>
+      {/* blur + tint */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.28)' : 'rgba(255,255,255,0.5)',
+      }} />
+      {/* shine */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(255,255,255,0.08)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+      }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Navigation bar — glass pills + large title
+// ─────────────────────────────────────────────────────────────
+function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
+  const muted = dark ? 'rgba(255,255,255,0.6)' : '#404040';
+  const text = dark ? '#fff' : '#000';
+  const pillIcon = (content) => (
+    <IOSGlassPill dark={dark}>
+      <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {content}
+      </div>
+    </IOSGlassPill>
+  );
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 10,
+      paddingTop: 62, paddingBottom: 10, position: 'relative', zIndex: 5,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
+      }}>
+        {/* back chevron */}
+        {pillIcon(
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ marginLeft: -1 }}>
+            <path d="M10 2L2 10l8 8" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        {/* trailing ellipsis */}
+        {trailingIcon && pillIcon(
+          <svg width="22" height="6" viewBox="0 0 22 6">
+            <circle cx="3" cy="3" r="2.5" fill={muted}/>
+            <circle cx="11" cy="3" r="2.5" fill={muted}/>
+            <circle cx="19" cy="3" r="2.5" fill={muted}/>
+          </svg>
+        )}
+      </div>
+      {/* large title */}
+      <div style={{
+        padding: '0 16px',
+        fontFamily: '-apple-system, system-ui',
+        fontSize: 34, fontWeight: 700, lineHeight: '41px',
+        color: text, letterSpacing: 0.4,
+      }}>{title}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Grouped list (inset card, r:26) + row (52px)
+// ─────────────────────────────────────────────────────────────
+function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
+  const text = dark ? '#fff' : '#000';
+  const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
+  const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', minHeight: 52,
+      padding: '0 16px', position: 'relative',
+      fontFamily: '-apple-system, system-ui', fontSize: 17,
+      letterSpacing: -0.43,
+    }}>
+      {icon && (
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, background: icon,
+          marginRight: 12, flexShrink: 0,
+        }} />
+      )}
+      <div style={{ flex: 1, color: text }}>{title}</div>
+      {detail && <span style={{ color: sec, marginRight: 6 }}>{detail}</span>}
+      {chevron && (
+        <svg width="8" height="14" viewBox="0 0 8 14" style={{ flexShrink: 0 }}>
+          <path d="M1 1l6 6-6 6" stroke={ter} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', bottom: 0, right: 0,
+          left: icon ? 58 : 16, height: 0.5, background: sep,
+        }} />
+      )}
+    </div>
+  );
+}
+
+function IOSList({ header, children, dark = false }) {
+  const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const bg = dark ? '#1C1C1E' : '#fff';
+  return (
+    <div>
+      {header && (
+        <div style={{
+          fontFamily: '-apple-system, system-ui', fontSize: 13,
+          color: hc, textTransform: 'uppercase',
+          padding: '8px 36px 6px', letterSpacing: -0.08,
+        }}>{header}</div>
+      )}
+      <div style={{
+        background: bg, borderRadius: 26,
+        margin: '0 16px', overflow: 'hidden',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Device frame
+// ─────────────────────────────────────────────────────────────
+function IOSDevice({
+  children, width = 402, height = 874, dark = false,
+  title, keyboard = false,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      {/* status bar (absolute) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      {/* nav + content */}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {keyboard && <IOSKeyboard dark={dark} />}
+      </div>
+      {/* home indicator — always on top */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Keyboard — iOS 26 liquid glass
+// ─────────────────────────────────────────────────────────────
+function IOSKeyboard({ dark = false }) {
+  const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
+  const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
+  const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
+
+  // special-key icons
+  const icons = {
+    shift: <svg width="19" height="17" viewBox="0 0 19 17"><path d="M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z" fill={glyph}/></svg>,
+    del: <svg width="23" height="17" viewBox="0 0 23 17"><path d="M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z" fill="none" stroke={glyph} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l7 7M17 5l-7 7" stroke={glyph} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    ret: <svg width="20" height="14" viewBox="0 0 20 14"><path d="M18 1v6H4m0 0l4-4M4 7l4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  };
+
+  const key = (content, { w, flex, ret, fs = 25, k } = {}) => (
+    <div key={k} style={{
+      height: 42, borderRadius: 8.5,
+      flex: flex ? 1 : undefined, width: w, minWidth: 0,
+      background: ret ? '#08f' : keyBg,
+      boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
+    }}>{content}</div>
+  );
+
+  const row = (keys, pad = 0) => (
+    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+      {keys.map(l => key(l, { flex: true, k: l }))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'relative', zIndex: 15, borderRadius: 27, overflow: 'hidden',
+      padding: '11px 0 2px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      boxShadow: dark
+        ? '0 -2px 20px rgba(0,0,0,0.09)'
+        : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)',
+    }}>
+      {/* liquid glass bg — same recipe as nav pills */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* autocorrect bar */}
+      <div style={{
+        display: 'flex', gap: 20, alignItems: 'center',
+        padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {['"The"', 'the', 'to'].map((w, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
+            <div style={{
+              flex: 1, textAlign: 'center',
+              fontFamily: '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+            }}>{w}</div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* key layout */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 13,
+        padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {row(['q','w','e','r','t','y','u','i','o','p'])}
+        {row(['a','s','d','f','g','h','j','k','l'], 20)}
+        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
+          {key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
+            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+          </div>
+          {key(icons.del, { w: 45, k: 'del' })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key('', { flex: true, k: 'space' })}
+          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        </div>
+      </div>
+
+      {/* bottom spacer (emoji+mic area, icons omitted) */}
+      <div style={{ height: 56, width: '100%', position: 'relative' }} />
+    </div>
+  );
+}
+
+Object.assign(window, {
+  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard,
+});
+</script>
+<script type="text/babel" data-presets="env,react">
+// 찬양팀 로스터 앱 - 메인 앱 컴포넌트
+// theme prop: 'cute' | 'bold' (디자인 시스템 분기)
+
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ─────────────────────────────────────────────────────────
+// 테마 정의
+const THEMES = {
+  cute: {
+    bg: '#FFF7F9',
+    surface: '#FFFFFF',
+    surfaceAlt: '#FDF2F8',
+    border: '#FCE7F3',
+    text: '#3F1F2E',
+    textMuted: '#9F6B82',
+    primary: '#EC4899',
+    primaryFg: '#FFFFFF',
+    accent: '#A78BFA',
+    accent2: '#FBBF24',
+    danger: '#E11D48',
+    success: '#10B981',
+    fontHead: '"Apple SD Gothic Neo", -apple-system, system-ui, sans-serif',
+    fontBody: '"Apple SD Gothic Neo", -apple-system, system-ui, sans-serif',
+    radius: 20,
+    shadow: '0 4px 20px rgba(236,72,153,0.08), 0 1px 2px rgba(63,31,46,0.04)',
+    iconStyle: 'iso',
+  },
+  bold: {
+    bg: '#F4F1EA',
+    surface: '#FFFFFF',
+    surfaceAlt: '#FAFAFA',
+    border: '#1C1917',
+    text: '#0C0A09',
+    textMuted: '#57534E',
+    primary: '#FACC15',
+    primaryFg: '#0C0A09',
+    accent: '#0C0A09',
+    accent2: '#DC2626',
+    danger: '#DC2626',
+    success: '#15803D',
+    fontHead: '"Apple SD Gothic Neo", -apple-system, system-ui, sans-serif',
+    fontBody: '"Apple SD Gothic Neo", -apple-system, system-ui, sans-serif',
+    radius: 4,
+    shadow: '4px 4px 0 #0C0A09',
+    iconStyle: 'iso',
+  },
+};
+
+// ─────────────────────────────────────────────────────────
+// 작은 헬퍼들
+function fmtDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+
+function getMember(members, id) { return members.find(m => m.id === id); }
+function getInstrument(id) { return INSTRUMENTS.find(i => i.id === id); }
+
+// ─────────────────────────────────────────────────────────
+// 공용: 멤버 칩 (이름 + 작은 아바타)
+function MemberAvatar({ name, size = 32, theme }) {
+  const initial = name ? name.slice(-2) : '?';
+  const hash = name ? name.charCodeAt(0) + name.charCodeAt(name.length - 1) : 0;
+  const hue = (hash * 47) % 360;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: theme.radius >= 16 ? '50%' : 4,
+      background: `oklch(0.85 0.08 ${hue})`,
+      color: `oklch(0.3 0.08 ${hue})`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: theme.fontBody, fontWeight: 600,
+      fontSize: size * 0.42, flexShrink: 0,
+      border: theme.iconStyle === 'iso' && theme.radius < 10 ? `2px solid ${theme.border}` : 'none',
+    }}>{initial}</div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// 공용: 버튼
+function Btn({ children, onClick, variant = 'primary', theme, style = {}, disabled }) {
+  const base = {
+    border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+    fontFamily: theme.fontBody, fontWeight: 600,
+    padding: '12px 18px', borderRadius: theme.radius >= 16 ? 14 : 4,
+    fontSize: 15, transition: 'transform 0.08s, box-shadow 0.15s',
+    opacity: disabled ? 0.4 : 1,
+  };
+  let v;
+  if (variant === 'primary') {
+    v = { background: theme.primary, color: theme.primaryFg, boxShadow: theme.radius < 10 ? `3px 3px 0 ${theme.border}` : 'none' };
+  } else if (variant === 'ghost') {
+    v = { background: 'transparent', color: theme.text };
+  } else if (variant === 'outline') {
+    v = { background: theme.surface, color: theme.text, border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}` };
+  } else if (variant === 'danger') {
+    v = { background: theme.danger, color: '#fff' };
+  }
+  return (
+    <button
+      onClick={disabled ? undefined : onClick}
+      style={{ ...base, ...v, ...style }}
+      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'translate(1px,1px)'; }}
+      onMouseUp={e => e.currentTarget.style.transform = ''}
+      onMouseLeave={e => e.currentTarget.style.transform = ''}
+    >{children}</button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// 탭바 (하단)
+function TabBar({ active, onChange, theme }) {
+  const tabs = [
+    { id: 'week', label: '이번 주', emoji: '🗓️' },
+    { id: 'roster', label: '로스터', emoji: '🎵' },
+    { id: 'members', label: '멤버', emoji: '👥' },
+  ];
+  return (
+    <div style={{
+      display: 'flex', gap: 0,
+      background: theme.surface,
+      borderTop: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+      padding: '8px 8px 24px',
+      position: 'relative', zIndex: 30,
+    }}>
+      {tabs.map(t => {
+        const isActive = active === t.id;
+        return (
+          <button key={t.id} onClick={() => onChange(t.id)}
+            style={{
+              flex: 1, border: 'none', background: 'transparent',
+              cursor: 'pointer', padding: '8px 4px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              color: isActive ? theme.primary : theme.textMuted,
+              fontFamily: theme.fontBody, fontWeight: isActive ? 700 : 500, fontSize: 11,
+            }}>
+            <div style={{
+              fontSize: 22, transition: 'transform 0.2s',
+              transform: isActive ? 'scale(1.15)' : 'scale(1)',
+              filter: theme.iconStyle === 'iso' && !isActive ? 'grayscale(0.5)' : 'none',
+            }}>{t.emoji}</div>
+            <div>{t.label}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+Object.assign(window, { THEMES, fmtDate, getMember, getInstrument, MemberAvatar, Btn, TabBar });
+</script>
+<script type="text/babel" data-presets="env,react">
+// 멤버 관리 화면
+
+const { useState: useStateMembers } = React;
+
+function MembersScreen({ members, setMembers, theme }) {
+  const [editingId, setEditingId] = useStateMembers(null);
+  const [showNew, setShowNew] = useStateMembers(false);
+
+  const editing = editingId === 'new' ? null : members.find(m => m.id === editingId);
+
+  function saveMember(m) {
+    if (m.id) {
+      setMembers(members.map(x => x.id === m.id ? m : x));
+    } else {
+      const id = 'm' + Date.now();
+      setMembers([...members, { ...m, id }]);
+    }
+    setEditingId(null); setShowNew(false);
+  }
+  function deleteMember(id) {
+    setMembers(members.filter(x => x.id !== id));
+    setEditingId(null);
+  }
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: theme.fontBody, color: theme.text }}>
+      {/* 고정 헤더 */}
+      <div>
+        <div style={{ padding: '20px 20px 12px' }}>
+          <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>
+            멤버 <span style={{ color: theme.primary }}>{members.filter(m=>m.active).length}</span>
+            <span style={{ fontSize: 18, fontWeight: 500, color: theme.textMuted, marginLeft: 6 }}>/ {members.length}</span>
+          </div>
+          <div style={{ color: theme.textMuted, fontSize: 14, marginTop: 4 }}>찬양팀 악기 멤버 관리</div>
+        </div>
+        <div style={{ padding: '0 20px 12px' }}>
+          <Btn theme={theme} variant="outline" style={{ width: '100%' }} onClick={() => setShowNew(true)}>+ 새 멤버 추가</Btn>
+        </div>
+      </div>
+
+      {/* 스크롤 멤버 리스트 */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {members.map(m => (
+          <div key={m.id}
+            onClick={() => setEditingId(m.id)}
+            style={{
+              background: theme.surface,
+              borderRadius: theme.radius,
+              padding: '14px 16px',
+              border: theme.radius < 10 ? `2px solid ${theme.border}` : `1px solid ${theme.border}`,
+              boxShadow: theme.shadow,
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 12,
+              opacity: m.active ? 1 : 0.5,
+            }}>
+            <MemberAvatar name={m.name} size={44} theme={theme} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontWeight: 700, fontSize: 17 }}>{m.name}</span>
+                {!m.active && <span style={{ fontSize: 11, padding: '2px 6px', background: theme.surfaceAlt, color: theme.textMuted, borderRadius: 4 }}>비활성</span>}
+                <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4,
+                  background: m.defaultService === 'both' ? theme.primary : theme.surfaceAlt,
+                  color: m.defaultService === 'both' ? theme.primaryFg : theme.textMuted,
+                  fontWeight: 600,
+                }}>
+                  {m.defaultService === 'both' ? '둘 다' : m.defaultService === 'first' ? '2부' : '3부'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                {m.instruments.map(iid => {
+                  const inst = getInstrument(iid);
+                  return (
+                    <div key={iid} style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '3px 8px 3px 4px',
+                      background: theme.surfaceAlt,
+                      borderRadius: theme.radius >= 16 ? 999 : 4,
+                      fontSize: 12, fontWeight: 600,
+                    }}>
+                      <div style={{ width: 22, height: 22, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <InstrumentIcon id={iid} size={22} paletteName={theme.iconPalette || 'cute'} />
+                      </div>
+                      {inst.short}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ color: theme.textMuted, fontSize: 20 }}>›</div>
+          </div>
+        ))}
+      </div>
+      </div>
+
+      {/* 편집 시트 */}
+      {(editing || showNew) && (
+        <MemberEditSheet
+          theme={theme}
+          member={editing}
+          onClose={() => { setEditingId(null); setShowNew(false); }}
+          onSave={saveMember}
+          onDelete={editing ? deleteMember : null}
+        />
+      )}
+    </div>
+  );
+}
+
+function MemberEditSheet({ theme, member, onClose, onSave, onDelete }) {
+  const init = member || { name: '', instruments: [], defaultService: 'both', active: true, note: '' };
+  const [m, setM] = useStateMembers(init);
+
+  function toggleInst(id) {
+    setM({ ...m, instruments: m.instruments.includes(id)
+      ? m.instruments.filter(x => x !== id)
+      : [...m.instruments, id] });
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+      zIndex: 100, display: 'flex', alignItems: 'flex-end',
+      animation: 'fadeIn 0.2s',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: theme.surface, width: '100%',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        padding: '12px 20px 32px',
+        animation: 'slideUp 0.25s ease-out',
+        maxHeight: '85%', overflowY: 'auto',
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: theme.border, margin: '0 auto 16px' }} />
+        <div style={{ fontFamily: theme.fontHead, fontSize: 22, fontWeight: 800, marginBottom: 16 }}>
+          {member ? '멤버 수정' : '새 멤버'}
+        </div>
+
+        {/* 이름 */}
+        <Field label="이름" theme={theme}>
+          <input value={m.name} onChange={e => setM({...m, name: e.target.value})}
+            placeholder="예: 김민수"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '12px 14px',
+              border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+              borderRadius: theme.radius >= 16 ? 12 : 4,
+              fontSize: 16, fontFamily: theme.fontBody,
+              background: theme.surfaceAlt, color: theme.text,
+              outline: 'none',
+            }}/>
+        </Field>
+
+        {/* 악기 */}
+        <Field label="가능 악기" theme={theme}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {INSTRUMENTS.map(inst => {
+              const sel = m.instruments.includes(inst.id);
+              return (
+                <button key={inst.id} onClick={() => toggleInst(inst.id)}
+                  style={{
+                    border: `${theme.radius < 10 ? 2 : 1}px solid ${sel ? theme.primary : theme.border}`,
+                    background: sel ? theme.primary : theme.surface,
+                    color: sel ? theme.primaryFg : theme.text,
+                    borderRadius: theme.radius >= 16 ? 14 : 4,
+                    padding: '10px 6px',
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    fontFamily: theme.fontBody, fontWeight: 700, fontSize: 12,
+                  }}>
+                  <div style={{ filter: sel ? 'none' : 'grayscale(0.4)', opacity: sel ? 1 : 0.85 }}>
+                    <InstrumentIcon id={inst.id} size={44} paletteName={theme.iconPalette || 'cute'} />
+                  </div>
+                  {inst.short}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+
+        {/* 기본 가능 예배 */}
+        <Field label="기본 가능 예배" theme={theme}>
+          <SegmentedToggle theme={theme}
+            value={m.defaultService}
+            onChange={v => setM({...m, defaultService: v})}
+            options={[
+              { value: 'first', label: '2부만' },
+              { value: 'second', label: '3부만' },
+              { value: 'both', label: '둘 다' },
+            ]} />
+        </Field>
+
+        {/* 활성 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 14px',
+          background: theme.surfaceAlt,
+          borderRadius: theme.radius >= 16 ? 14 : 4,
+          marginTop: 16,
+        }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>활성 멤버</div>
+            <div style={{ fontSize: 12, color: theme.textMuted }}>비활성이면 자동 배정에서 제외</div>
+          </div>
+          <Switch on={m.active} onChange={v => setM({...m, active: v})} theme={theme} />
+        </div>
+
+        {/* 메모 */}
+        <Field label="메모" theme={theme}>
+          <input value={m.note} onChange={e => setM({...m, note: e.target.value})}
+            placeholder="(선택) 특이사항"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '12px 14px',
+              border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+              borderRadius: theme.radius >= 16 ? 12 : 4,
+              fontSize: 15, fontFamily: theme.fontBody,
+              background: theme.surfaceAlt, color: theme.text,
+              outline: 'none',
+            }}/>
+        </Field>
+
+        {/* 액션 */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+          {onDelete && (
+            <Btn theme={theme} variant="outline" onClick={() => onDelete(m.id)}
+              style={{ color: theme.danger, borderColor: theme.danger }}>삭제</Btn>
+          )}
+          <Btn theme={theme} variant="ghost" onClick={onClose} style={{ flex: 1 }}>취소</Btn>
+          <Btn theme={theme} variant="primary" onClick={() => onSave(m)} style={{ flex: 1.5 }} disabled={!m.name || m.instruments.length === 0}>저장</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children, theme }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: theme.textMuted, marginBottom: 6 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function SegmentedToggle({ value, onChange, options, theme }) {
+  return (
+    <div style={{
+      display: 'flex',
+      background: theme.surfaceAlt,
+      padding: 3,
+      borderRadius: theme.radius >= 16 ? 12 : 4,
+      gap: 2,
+    }}>
+      {options.map(o => {
+        const sel = o.value === value;
+        return (
+          <button key={o.value} onClick={() => onChange(o.value)}
+            style={{
+              flex: 1, border: 'none', cursor: 'pointer',
+              padding: '10px 8px',
+              borderRadius: theme.radius >= 16 ? 10 : 3,
+              background: sel ? theme.surface : 'transparent',
+              color: sel ? theme.primary : theme.textMuted,
+              boxShadow: sel ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              fontFamily: theme.fontBody, fontWeight: 700, fontSize: 14,
+            }}>{o.label}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Switch({ on, onChange, theme }) {
+  return (
+    <button onClick={() => onChange(!on)}
+      style={{
+        width: 50, height: 30, border: 'none',
+        borderRadius: theme.radius >= 16 ? 999 : 4,
+        background: on ? theme.primary : theme.border,
+        position: 'relative', cursor: 'pointer',
+        transition: 'background 0.15s',
+      }}>
+      <div style={{
+        width: 24, height: 24,
+        borderRadius: theme.radius >= 16 ? '50%' : 2,
+        background: '#fff',
+        position: 'absolute', top: 3,
+        left: on ? 23 : 3,
+        transition: 'left 0.15s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      }} />
+    </button>
+  );
+}
+
+Object.assign(window, { MembersScreen, Field, SegmentedToggle, Switch });
+</script>
+<script type="text/babel" data-presets="env,react">
+// 주간 준비 화면 - 날짜, 인도자, availability 입력
+
+const { useState: useStateWeek } = React;
+
+function WeekScreen({ members, week, setWeek, theme, onGenerate }) {
+  // 인도자 같음/다름만 관리. 내부 표현은 firstLeader/secondLeader 동일/다름으로
+  const sameLeaderState = !!(week.firstLeader && week.firstLeader === week.secondLeader);
+  function setSameLeader(same) {
+    if (same) {
+      setWeek({ ...week, firstLeader: 'A', secondLeader: 'A' });
+    } else {
+      setWeek({ ...week, firstLeader: 'A', secondLeader: 'B' });
+    }
+  }
+  function setAvail(memberId, service, val) {
+    const next = { ...week.availability };
+    next[memberId] = { ...(next[memberId] || {}), [service]: val };
+    setWeek({ ...week, availability: next });
+  }
+  function clearAvail(memberId) {
+    const next = { ...week.availability };
+    delete next[memberId];
+    setWeek({ ...week, availability: next });
+  }
+
+  const sameLeader = week.firstLeader && week.firstLeader === week.secondLeader;
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: theme.fontBody, color: theme.text }}>
+      {/* 고정 상단 */}
+      <div>
+        <div style={{ padding: '20px 20px 12px' }}>
+          <div style={{ fontSize: 13, color: theme.textMuted, fontWeight: 600 }}>이번 주 예배</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+            <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>
+              {fmtDate(week.date)}
+            </div>
+            <button onClick={onGenerate} style={{
+              border: 'none', cursor: 'pointer',
+              background: theme.primary, color: theme.primaryFg,
+              borderRadius: 999,
+              padding: '7px 14px',
+              fontSize: 13, fontWeight: 700,
+              fontFamily: theme.fontBody,
+              display: 'flex', alignItems: 'center', gap: 5,
+              boxShadow: '0 2px 10px rgba(236,72,153,0.25)',
+              whiteSpace: 'nowrap',
+            }}>
+              🎰 자동생성
+            </button>
+          </div>
+        </div>
+
+        <div style={{ padding: '0 20px 16px' }}>
+          <input type="date" value={week.date}
+            onChange={e => setWeek({ ...week, date: e.target.value })}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '10px 14px',
+              border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+              borderRadius: theme.radius >= 16 ? 12 : 4,
+              background: theme.surface, color: theme.text,
+              fontSize: 15, fontFamily: theme.fontBody,
+              outline: 'none',
+            }}/>
+        </div>
+
+        <SectionTitle theme={theme}>2부 · 3부 인도자</SectionTitle>
+        <div style={{ padding: '0 16px 4px' }}>
+          <div style={{
+            background: theme.surface,
+            borderRadius: theme.radius,
+            padding: '14px 16px',
+            border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+            boxShadow: theme.shadow,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: theme.textMuted, marginBottom: 8 }}>
+              2부와 3부 인도자가
+            </div>
+            <SegmentedToggle theme={theme}
+              value={sameLeaderState ? 'same' : 'diff'}
+              onChange={v => setSameLeader(v === 'same')}
+              options={[
+                { value: 'same', label: '🔗 같음' },
+                { value: 'diff', label: '↔️ 다름' },
+              ]} />
+            <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 10, lineHeight: 1.5 }}>
+              {sameLeaderState
+                ? '인도자가 같으니 2부·3부 멤버를 최대한 동일하게 배정합니다.'
+                : '인도자가 다르므로 2부·3부 멤버를 독립적으로 배정합니다.'}
+            </div>
+          </div>
+        </div>
+
+        <SectionTitle theme={theme} style={{ marginTop: 16 }}>멤버 가능 여부</SectionTitle>
+        <div style={{ padding: '0 20px 8px', fontSize: 12, color: theme.textMuted }}>
+          기본 설정이 있으면 표시되고, 이번 주만 다르게 바꿀 수 있어요
+        </div>
+      </div>
+
+      {/* 스크롤 영역: 멤버 목록 */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {members.filter(m => m.active).map(m => {
+          const ex = week.availability[m.id];
+          const firstAvail = ex && typeof ex.first === 'boolean' ? ex.first
+            : m.defaultService === 'both' || m.defaultService === 'first';
+          const secondAvail = ex && typeof ex.second === 'boolean' ? ex.second
+            : m.defaultService === 'both' || m.defaultService === 'second';
+          const overridden = !!ex;
+          return (
+            <div key={m.id} style={{
+              background: theme.surface,
+              borderRadius: theme.radius,
+              padding: '12px 14px',
+              border: `${theme.radius < 10 ? 2 : 1}px solid ${overridden ? theme.primary : theme.border}`,
+              boxShadow: theme.shadow,
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <MemberAvatar name={m.name} size={36} theme={theme} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{m.name}</div>
+                <div style={{ fontSize: 11, color: theme.textMuted }}>
+                  {overridden ? '✏️ 이번 주 변경됨' : `기본: ${m.defaultService === 'both' ? '둘 다' : m.defaultService === 'first' ? '2부' : '3부'}`}
+                </div>
+              </div>
+              <ServicePill theme={theme} label="2부" on={firstAvail} onChange={v => setAvail(m.id, 'first', v)} />
+              <ServicePill theme={theme} label="3부" on={secondAvail} onChange={v => setAvail(m.id, 'second', v)} />
+              {overridden && (
+                <button onClick={() => clearAvail(m.id)} style={{
+                  border: 'none', background: 'transparent', cursor: 'pointer',
+                  color: theme.textMuted, fontSize: 11, padding: 4,
+                }}>↺</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      </div>
+
+      {/* 고정 하단: 자동 생성 버튼 */}
+      <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${theme.border}`, background: theme.bg }}>
+        <Btn theme={theme} variant="primary" onClick={onGenerate} style={{
+          width: '100%', padding: '16px 20px', fontSize: 17, fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
+          <span style={{ fontSize: 22 }}>🎰</span> 로스터 자동 생성
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ children, theme, style = {} }) {
+  return (
+    <div style={{
+      padding: '0 20px 8px', fontSize: 12, fontWeight: 700,
+      color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 0.6,
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+function LeaderRow({ label, value, onChange, theme }) {
+  const [editing, setEditing] = useStateWeek(false);
+  return (
+    <div style={{
+      background: theme.surface,
+      borderRadius: theme.radius,
+      padding: '14px 16px',
+      border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+      boxShadow: theme.shadow,
+      display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: theme.radius >= 16 ? '50%' : 4,
+        background: theme.primary, color: theme.primaryFg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontWeight: 800, fontSize: 16, fontFamily: theme.fontHead,
+      }}>{label}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 11, color: theme.textMuted, fontWeight: 600 }}>인도자</div>
+        {editing ? (
+          <input autoFocus value={value || ''}
+            onChange={e => onChange(e.target.value)}
+            onBlur={() => setEditing(false)}
+            onKeyDown={e => { if (e.key === 'Enter') setEditing(false); }}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '4px 8px',
+              border: `1px solid ${theme.primary}`,
+              borderRadius: 4, fontSize: 16, fontWeight: 700,
+              fontFamily: theme.fontBody,
+              background: theme.surfaceAlt, color: theme.text,
+              outline: 'none',
+            }}/>
+        ) : (
+          <div onClick={() => setEditing(true)} style={{
+            fontSize: 16, fontWeight: 700, cursor: 'text',
+            color: value ? theme.text : theme.textMuted,
+          }}>{value || '입력하세요'}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ServicePill({ label, on, onChange, theme }) {
+  return (
+    <button onClick={() => onChange(!on)}
+      style={{
+        border: `${theme.radius < 10 ? 2 : 1}px solid ${on ? theme.primary : theme.border}`,
+        background: on ? theme.primary : theme.surface,
+        color: on ? theme.primaryFg : theme.textMuted,
+        borderRadius: theme.radius >= 16 ? 999 : 4,
+        padding: '6px 10px',
+        fontSize: 12, fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: theme.fontBody,
+        opacity: on ? 1 : 0.6,
+        position: 'relative',
+      }}>
+      {label}
+      {!on && <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.danger, fontSize: 18, fontWeight: 800 }}>✕</span>}
+    </button>
+  );
+}
+
+Object.assign(window, { WeekScreen });
+</script>
+<script type="text/babel" data-presets="env,react">
+// 로스터 화면 - 자동생성 (슬롯머신 애니메이션) + 수동 수정 + 인라인 경고
+
+const { useState: useStateRoster, useEffect: useEffectRoster, useRef: useRefRoster, useMemo } = React;
+
+function RosterScreen({ members, week, roster, setRoster, theme, animateOnMount, onAnimateDone }) {
+  const [activeService, setActiveService] = useStateRoster('first');
+  const [pickerFor, setPickerFor] = useStateRoster(null); // { service, instrumentId }
+  const [animating, setAnimating] = useStateRoster(animateOnMount);
+  const [showSummary, setShowSummary] = useStateRoster(false);
+
+  useEffectRoster(() => {
+    if (animateOnMount) {
+      setAnimating(true);
+      const t = setTimeout(() => {
+        setAnimating(false);
+        onAnimateDone && onAnimateDone();
+      }, 2400);
+      return () => clearTimeout(t);
+    }
+  }, [animateOnMount]);
+
+  function regenerate() {
+    setAnimating(true);
+    setTimeout(() => {
+      const r = autoBuildRoster(members, week);
+      setRoster(r);
+      setAnimating(false);
+    }, 50);
+    // 새 로스터 보여주기 전에 애니메이션
+    setTimeout(() => {
+      const r = autoBuildRoster(members, week);
+      setRoster(r);
+    }, 100);
+  }
+
+  function setSlot(service, instrumentId, memberId) {
+    setRoster({ ...roster, [service]: { ...roster[service], [instrumentId]: memberId } });
+  }
+
+  const warnings = useMemo(() => checkWarnings(roster, members, week), [roster, members, week]);
+  const cur = roster[activeService];
+
+  const sameLeader = week.firstLeader && week.firstLeader === week.secondLeader;
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: theme.fontBody, color: theme.text }}>
+      {/* 고정 상단 */}
+      <div>
+        <div style={{ padding: '20px 20px 12px' }}>
+          <div style={{ fontSize: 13, color: theme.textMuted, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{fmtDate(week.date)} 로스터</span>
+            <button onClick={() => setShowSummary(true)} style={{
+              border: `1px solid ${theme.border}`,
+              background: theme.surface, color: theme.text,
+              padding: '4px 10px', borderRadius: theme.radius >= 16 ? 999 : 4,
+              fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              fontFamily: theme.fontBody,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+            }}>📋 결과 보기 / 복사</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontSize: 32, fontWeight: 800, lineHeight: 1.1, marginTop: 2 }}>
+              {activeService === 'first' ? '2부' : '3부'} 예배
+            </div>
+            <div style={{ fontSize: 13, color: theme.textMuted }}>
+              인도자 · <span style={{ fontWeight: 700, color: theme.text }}>
+                {sameLeader ? '같음' : '다름'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '0 16px 10px' }}>
+          <SegmentedToggle theme={theme}
+          value={activeService}
+          onChange={setActiveService}
+          options={[
+          { value: 'first', label: `2부 ${countFilled(roster.first)}/${INSTRUMENTS.length}` },
+          { value: 'second', label: `3부 ${countFilled(roster.second)}/${INSTRUMENTS.length}` }]
+          } />
+        </div>
+
+        {sameLeader &&
+        <div style={{ padding: '0 20px 8px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 10px', background: theme.surfaceAlt,
+            borderRadius: 999, fontSize: 11, fontWeight: 700,
+            color: theme.textMuted,
+            border: `1px solid ${theme.border}`
+          }}>
+              🔗 2부·3부 멤버 통일됨
+            </div>
+          </div>
+        }
+      </div>
+
+      {/* 스크롤 영역: 악기 카드 + 경고 */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {INSTRUMENTS.map((inst) => {
+            const memberId = cur[inst.id];
+            const member = memberId ? getMember(members, memberId) : null;
+            const slotWarnings = warnings.filter((w) =>
+            w.service === activeService && w.instrument === inst.id);
+            return (
+              <InstrumentSlot key={inst.id}
+              theme={theme}
+              instrument={inst}
+              member={member}
+              warnings={slotWarnings}
+              animating={animating}
+              animationDelay={INSTRUMENTS.indexOf(inst) * 350}
+              animationMembers={members.filter((m) => m.active && m.instruments.includes(inst.id))}
+              onClick={() => setPickerFor({ service: activeService, instrumentId: inst.id })} />);
+          })}
+        </div>
+
+        {warnings.length > 0 && !animating &&
+        <div style={{ padding: '12px 0 0' }}>
+            <div style={{
+            background: `oklch(0.96 0.04 25)`,
+            border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.danger}`,
+            borderRadius: theme.radius,
+            padding: '12px 14px'
+          }}>
+              <div style={{ fontWeight: 800, color: theme.danger, fontSize: 14, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                ⚠️ 경고 {warnings.length}건
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {warnings.slice(0, 4).map((w, i) =>
+              <div key={i} style={{ fontSize: 12, color: theme.text }}>· {w.msg}</div>
+              )}
+                {warnings.length > 4 && <div style={{ fontSize: 12, color: theme.textMuted }}>+ {warnings.length - 4}개 더</div>}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      {/* 고정 하단: 재생성 버튼 */}
+      <div style={{ padding: '12px 20px 16px', borderTop: `1px solid ${theme.border}`, background: theme.bg }}>
+        <Btn theme={theme} variant="outline" onClick={regenerate} style={{ width: '100%' }} disabled={animating}>
+          🎲 다시 돌리기
+        </Btn>
+      </div>
+
+      {/* 멤버 선택 시트 */}
+      {pickerFor &&
+      <MemberPicker theme={theme}
+      members={members} week={week}
+      service={pickerFor.service}
+      instrumentId={pickerFor.instrumentId}
+      currentId={roster[pickerFor.service][pickerFor.instrumentId]}
+      onPick={(mid) => {setSlot(pickerFor.service, pickerFor.instrumentId, mid);setPickerFor(null);}}
+      onClose={() => setPickerFor(null)} />
+      }
+
+      {/* 결과 요약 시트 */}
+      {showSummary &&
+      <SummarySheet theme={theme}
+        members={members} week={week} roster={roster}
+        sameLeader={sameLeader}
+        onClose={() => setShowSummary(false)} />
+      }
+    </div>);
+
+}
+
+function countFilled(svcRoster) {
+  return INSTRUMENTS.filter((i) => svcRoster[i.id]).length;
+}
+
+// ─────────────────────────────────────────────────────────
+// 악기 슬롯 카드 (슬롯머신 애니메이션)
+function InstrumentSlot({ theme, instrument, member, warnings, animating, animationDelay, animationMembers, onClick }) {
+  const [reelText, setReelText] = useStateRoster(member ? member.name : '—');
+  const [reelStopped, setReelStopped] = useStateRoster(true);
+
+  useEffectRoster(() => {
+    if (animating) {
+      setReelStopped(false);
+      // 시작 지연
+      const startT = setTimeout(() => {
+        const interval = setInterval(() => {
+          if (animationMembers.length > 0) {
+            const random = animationMembers[Math.floor(Math.random() * animationMembers.length)];
+            setReelText(random.name);
+          } else {
+            setReelText('?');
+          }
+        }, 70);
+        // 멈춤
+        const stopT = setTimeout(() => {
+          clearInterval(interval);
+          setReelText(member ? member.name : '미배정');
+          setReelStopped(true);
+        }, 1400);
+        // cleanup
+        return () => {clearInterval(interval);clearTimeout(stopT);};
+      }, animationDelay);
+      return () => clearTimeout(startT);
+    } else {
+      setReelText(member ? member.name : '미배정');
+      setReelStopped(true);
+    }
+  }, [animating, member?.id]);
+
+  const hasWarning = warnings.length > 0;
+  const isEmpty = !member;
+
+  return (
+    <div onClick={() => !animating && onClick()}
+    style={{
+      background: theme.surface,
+      border: `${theme.radius < 10 ? 2 : 1}px solid ${hasWarning ? theme.danger : theme.border}`,
+      borderRadius: theme.radius,
+      padding: '14px 16px',
+      boxShadow: theme.shadow,
+      display: 'flex', alignItems: 'center', gap: 14,
+      cursor: animating ? 'default' : 'pointer',
+      position: 'relative',
+      transition: 'transform 0.15s, box-shadow 0.15s'
+    }}>
+      {/* 악기 일러스트 */}
+      <div style={{
+        width: 64, height: 64, flexShrink: 0,
+        background: theme.surfaceAlt,
+        borderRadius: theme.radius >= 16 ? 16 : 4,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        animation: !reelStopped ? 'wobble 0.4s infinite' : 'none'
+      }}>
+        <InstrumentIcon id={instrument.id} size={56} paletteName={theme.iconPalette || 'cute'} />
+      </div>
+
+      {/* 정보 */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: theme.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+          {instrument.en}
+        </div>
+        <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontSize: 22, fontWeight: 800, lineHeight: 1.2, marginTop: 2,
+          color: isEmpty && reelStopped ? theme.textMuted : theme.text,
+          fontStyle: isEmpty && reelStopped ? 'italic' : 'normal'
+        }}>
+          {/* 슬롯머신 효과: 빠르게 바뀌는 텍스트 */}
+          <span style={{
+            display: 'inline-block',
+            transform: !reelStopped ? `translateY(${Math.random() * 4 - 2}px)` : 'none',
+            transition: reelStopped ? 'transform 0.2s' : 'none', fontFamily: "\"Apple SD Gothic Neo\""
+          }}>{reelText}</span>
+        </div>
+        <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>{instrument.label}</div>
+      </div>
+
+      {/* 경고 뱃지 */}
+      {hasWarning && reelStopped &&
+      <div style={{
+        position: 'absolute', top: -6, right: -6,
+        background: theme.danger, color: '#fff',
+        fontSize: 11, fontWeight: 800,
+        padding: '3px 8px',
+        borderRadius: theme.radius >= 16 ? 999 : 4,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        display: 'flex', alignItems: 'center', gap: 4
+      }}>
+          ⚠ {warnings[0].type === 'empty' ? '미배정' :
+        warnings[0].type === 'unavailable' ? '불가능' :
+        warnings[0].type === 'duplicate' ? '중복' :
+        warnings[0].type === 'wrongInstrument' ? '악기 불일치' : '확인'}
+        </div>
+      }
+
+      {!animating &&
+      <div style={{ color: theme.textMuted, fontSize: 24, fontWeight: 300 }}>›</div>
+      }
+    </div>);
+
+}
+
+// ─────────────────────────────────────────────────────────
+// 멤버 선택 시트
+function MemberPicker({ theme, members, week, service, instrumentId, currentId, onPick, onClose }) {
+  const inst = getInstrument(instrumentId);
+  // 해당 악기 가능 + 활성 멤버 분류
+  const all = members.filter((m) => m.active);
+  const groups = {
+    valid: all.filter((m) => m.instruments.includes(instrumentId) && canAttend(m, week, service)),
+    canPlayCantAttend: all.filter((m) => m.instruments.includes(instrumentId) && !canAttend(m, week, service)),
+    cantPlay: all.filter((m) => !m.instruments.includes(instrumentId))
+  };
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+      zIndex: 100, display: 'flex', alignItems: 'flex-end'
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        background: theme.surface, width: '100%',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        padding: '12px 0 32px',
+        animation: 'slideUp 0.25s ease-out',
+        maxHeight: '80%', display: 'flex', flexDirection: 'column'
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: theme.border, margin: '0 auto 12px' }} />
+        <div style={{ padding: '0 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <InstrumentIcon id={instrumentId} size={42} paletteName={theme.iconPalette || 'cute'} />
+          <div>
+            <div style={{ fontSize: 12, color: theme.textMuted, fontWeight: 600 }}>{service === 'first' ? '2부' : '3부'} {inst.label}</div>
+            <div style={{ fontFamily: theme.fontHead, fontSize: 20, fontWeight: 800 }}>담당자 선택</div>
+          </div>
+        </div>
+
+        <div style={{ overflowY: 'auto', padding: '0 16px', flex: 1 }}>
+          {/* 미배정 옵션 */}
+          <PickerRow theme={theme}
+          name="미배정으로 두기" sub="비워둠"
+          selected={!currentId}
+          onClick={() => onPick(null)}
+          italic />
+          
+
+          {groups.valid.length > 0 && <GroupLabel theme={theme}>가능한 멤버</GroupLabel>}
+          {groups.valid.map((m) =>
+          <PickerRow key={m.id} theme={theme}
+          name={m.name} sub={m.instruments.map((i) => getInstrument(i).short).join(' · ')}
+          selected={m.id === currentId}
+          onClick={() => onPick(m.id)} />
+
+          )}
+
+          {groups.canPlayCantAttend.length > 0 && <GroupLabel theme={theme}>이번 주 불가능 (가능한 악기)</GroupLabel>}
+          {groups.canPlayCantAttend.map((m) =>
+          <PickerRow key={m.id} theme={theme}
+          name={m.name} sub={`이번 주 ${service === 'first' ? '2부' : '3부'} 불가능`}
+          warn selected={m.id === currentId}
+          onClick={() => onPick(m.id)} />
+
+          )}
+
+          {groups.cantPlay.length > 0 && <GroupLabel theme={theme}>{inst.label} 불가능</GroupLabel>}
+          {groups.cantPlay.map((m) =>
+          <PickerRow key={m.id} theme={theme}
+          name={m.name} sub={`${inst.label} 가능 악기 아님`}
+          warn dim selected={m.id === currentId}
+          onClick={() => onPick(m.id)} />
+
+          )}
+        </div>
+      </div>
+    </div>);
+
+}
+
+function GroupLabel({ children, theme }) {
+  return <div style={{ fontSize: 11, fontWeight: 800, color: theme.textMuted, letterSpacing: 0.6, textTransform: 'uppercase', padding: '14px 4px 6px' }}>{children}</div>;
+}
+
+function PickerRow({ name, sub, selected, onClick, theme, warn, italic, dim }) {
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '12px 12px',
+      borderRadius: theme.radius >= 16 ? 12 : 4,
+      background: selected ? theme.surfaceAlt : 'transparent',
+      border: selected ? `2px solid ${theme.primary}` : '2px solid transparent',
+      cursor: 'pointer', marginBottom: 4,
+      opacity: dim ? 0.4 : 1
+    }}>
+      <MemberAvatar name={italic ? '—' : name} size={36} theme={theme} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: warn ? theme.danger : theme.text, fontStyle: italic ? 'italic' : 'normal' }}>
+          {name}
+        </div>
+        <div style={{ fontSize: 12, color: warn ? theme.danger : theme.textMuted }}>{sub}</div>
+      </div>
+      {warn && <span style={{ fontSize: 16 }}>⚠️</span>}
+      {selected && <span style={{ color: theme.primary, fontSize: 22, fontWeight: 800 }}>✓</span>}
+    </div>);
+
+}
+
+// ─────────────────────────────────────────────────────────
+// 결과 요약 시트 - 텍스트 형식 + 복사
+function SummarySheet({ theme, members, week, roster, sameLeader, onClose }) {
+  const [copied, setCopied] = useStateRoster(false);
+
+  function nameOf(mid) {
+    if (!mid) return '미배정';
+    const m = members.find(x => x.id === mid);
+    return m ? m.name : '미배정';
+  }
+
+  const text = useMemo(() => {
+    const lines = [];
+    lines.push(`📅 ${fmtDate(week.date)}`);
+    lines.push(`2부/3부 인도자: ${sameLeader ? '같음' : '다름'}`);
+    lines.push('');
+    lines.push('2부');
+    INSTRUMENTS.forEach(i => lines.push(`${i.label}: ${nameOf(roster.first[i.id])}`));
+    lines.push('');
+    lines.push('3부');
+    INSTRUMENTS.forEach(i => lines.push(`${i.label}: ${nameOf(roster.second[i.id])}`));
+    return lines.join('\n');
+  }, [roster, members, week, sameLeader]);
+
+  function copyText() {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }).catch(() => {
+        fallback();
+      });
+    } else fallback();
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+      zIndex: 100, display: 'flex', alignItems: 'flex-end',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: theme.surface, width: '100%',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        padding: '12px 0 32px',
+        animation: 'slideUp 0.25s ease-out',
+        maxHeight: '85%', display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: theme.border, margin: '0 auto 12px' }} />
+        <div style={{ padding: '0 20px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontSize: 22, fontWeight: 800 }}>최종 로스터</div>
+          <div style={{ fontSize: 12, color: theme.textMuted }}>공유용 텍스트</div>
+        </div>
+        <div style={{ padding: '0 16px', overflowY: 'auto' }}>
+          <pre style={{
+            background: theme.surfaceAlt,
+            border: `${theme.radius < 10 ? 2 : 1}px solid ${theme.border}`,
+            borderRadius: theme.radius,
+            padding: '14px 16px',
+            margin: 0,
+            fontFamily: '"Apple SD Gothic Neo", "SF Mono", monospace',
+            fontSize: 14, fontWeight: 500, lineHeight: 1.7,
+            color: theme.text, whiteSpace: 'pre-wrap', wordBreak: 'keep-all',
+          }}>{text}</pre>
+        </div>
+        <div style={{ padding: '14px 20px 0', display: 'flex', gap: 8 }}>
+          <Btn theme={theme} variant="outline" onClick={onClose} style={{ flex: 1 }}>닫기</Btn>
+          <Btn theme={theme} variant="primary" onClick={copyText} style={{ flex: 2 }}>
+            {copied ? '✓ 복사됨!' : '📋 복사하기'}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { RosterScreen });</script>
+<script type="text/babel" data-presets="env,react">
+// 메인 앱 컴포넌트 — 탭 전환 + 상태 관리
+
+const { useState: useAppState } = React;
+
+function RosterApp({ theme: themeName = 'cute', iconPalette }) {
+  const themeBase = THEMES[themeName];
+  const theme = { ...themeBase, iconPalette: iconPalette || (themeName === 'bold' ? 'bold' : 'cute') };
+
+  const [members, setMembers] = useAppState(SEED_MEMBERS);
+  const [week, setWeek] = useAppState(SEED_WEEK);
+  const [tab, setTab] = useAppState('week');
+  const [roster, setRoster] = useAppState(() => autoBuildRoster(SEED_MEMBERS, SEED_WEEK));
+  const [animateOnMount, setAnimateOnMount] = useAppState(false);
+
+  function handleGenerate() {
+    const r = autoBuildRoster(members, week);
+    setRoster(r);
+    setAnimateOnMount(true);
+    setTab('roster');
+  }
+
+  let content;
+  if (tab === 'week') {
+    content = <WeekScreen theme={theme} members={members} week={week} setWeek={setWeek} onGenerate={handleGenerate} />;
+  } else if (tab === 'roster') {
+    content = <RosterScreen theme={theme} members={members} week={week} roster={roster} setRoster={setRoster}
+      animateOnMount={animateOnMount} onAnimateDone={() => setAnimateOnMount(false)} />;
+  } else if (tab === 'members') {
+    content = <MembersScreen theme={theme} members={members} setMembers={setMembers} />;
+  }
+
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: theme.bg,
+      display: 'flex', flexDirection: 'column',
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
+      {/* 상단 브랜드 바 */}
+      <BrandHeader theme={theme} themeName={themeName} />
+      {/* 컨텐츠 */}
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {content}
+      </div>
+      {/* 하단 탭 */}
+      <TabBar active={tab} onChange={setTab} theme={theme} />
+    </div>
+  );
+}
+
+function BrandHeader({ theme, themeName }) {
+  return (
+    <div style={{
+      padding: '12px 20px 10px',
+      background: theme.bg,
+      borderBottom: themeName === 'bold' ? `2px solid ${theme.border}` : 'none',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{
+          width: 28, height: 28,
+          borderRadius: theme.radius >= 16 ? 8 : 4,
+          background: theme.primary, color: theme.primaryFg,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: theme.fontHead, fontWeight: 900, fontSize: 14,
+        }}>주</div>
+        <div style={{ fontFamily: '"Apple SD Gothic Neo"', fontWeight: 800, fontSize: 14, color: theme.text }}>
+          주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
+        </div>
+      </div>
+      {false && <div style={{
+        fontSize: 11, fontWeight: 700, color: theme.textMuted,
+        padding: '4px 8px', background: theme.surface,
+        borderRadius: theme.radius >= 16 ? 999 : 4,
+        border: `1px solid ${theme.border}`,
+      }}>{themeName === 'cute' ? 'soft' : 'bold'}</div>}
+    </div>
+  );
+}
+
+Object.assign(window, { RosterApp });
+</script>
 
 <script type="text/babel" data-presets="env,react">
 const { useState, useEffect } = React;
 
-const TWEAKS = /*EDITMODE-BEGIN*/{
-  "theme": "cute",
-  "iconPalette": "auto",
-  "showBoth": true
-}/*EDITMODE-END*/;
-
 function Root() {
-  const [t, setT] = useTweaks(TWEAKS);
-  // iconPalette 'auto' 면 테마와 매칭
-  const palette = t.iconPalette === 'auto' ? (t.theme === 'bold' ? 'bold' : 'cute') : t.iconPalette;
-
-  const showBoth = t.showBoth;
-
-  const phone = (themeName) => (
-    <IOSDevice width={390} height={780} dark={false}>
-      <div style={{ height: '100%', paddingTop: 44, boxSizing: 'border-box' }}>
-        <RosterApp theme={themeName} iconPalette={palette} />
-      </div>
-    </IOSDevice>
-  );
-
   return (
-    <>
-      <DesignCanvas
-        title="찬양팀 로스터"
-        subtitle="주안교회 · 모바일 프로토타입"
-        defaultBg="#ECECEE">
-        {showBoth ? (
-          <DCSection id="themes" title="테마 옵션">
-            <DCArtboard id="cute" label="Soft & Cute · 부드러운 핑크" width={390} height={780}>
-              {phone('cute')}
-            </DCArtboard>
-            <DCArtboard id="bold" label="Bold Editorial · 옐로우 + 블랙" width={390} height={780}>
-              {phone('bold')}
-            </DCArtboard>
-          </DCSection>
-        ) : (
-          <DCSection id="single" title={t.theme === 'bold' ? 'Bold Editorial' : 'Soft & Cute'}>
-            <DCArtboard id="phone" label="찬양팀 로스터 앱" width={390} height={780}>
-              {phone(t.theme)}
-            </DCArtboard>
-          </DCSection>
-        )}
-      </DesignCanvas>
-
-      <TweaksPanel title="Tweaks">
-        <TweakSection title="레이아웃">
-          <TweakToggle label="두 테마 나란히 보기" value={t.showBoth} onChange={v => setT({ showBoth: v })} />
-        </TweakSection>
-        <TweakSection title="단일 보기 테마">
-          <TweakRadio
-            value={t.theme}
-            onChange={v => setT({ theme: v })}
-            options={[
-              { value: 'cute', label: 'Soft & Cute' },
-              { value: 'bold', label: 'Bold Editorial' },
-            ]} />
-        </TweakSection>
-        <TweakSection title="악기 일러스트 컬러">
-          <TweakRadio
-            value={t.iconPalette}
-            onChange={v => setT({ iconPalette: v })}
-            options={[
-              { value: 'auto', label: '테마와 매칭' },
-              { value: 'cute', label: '파스텔' },
-              { value: 'bold', label: '블랙 + 옐로우' },
-              { value: 'neon', label: '네온' },
-            ]} />
-        </TweakSection>
-      </TweaksPanel>
-    </>
+    <div style={{ height: '100vh', width: '100%' }}>
+      <RosterApp theme="cute" iconPalette="cute" />
+    </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
 </script>
+
 </body>
 </html>
