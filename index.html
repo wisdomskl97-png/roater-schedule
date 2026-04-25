@@ -2196,42 +2196,6 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
       });
   }, [members, week, roster]);
 
-  // Firebase에서 최신 데이터 수동 불러오기
-  const [loadStatus, setLoadStatus] = useAppState('idle'); // 'idle' | 'loading' | 'loaded' | 'error'
-  const [loadMsg, setLoadMsg] = useAppState('');
-  function handleLoad() {
-    setLoadStatus('loading');
-    setLoadMsg('');
-    window.FSDOC.get()
-      .then(snap => {
-        if (snap.exists) {
-          const d = snap.data();
-          if (d.members) {
-            setMembers(d.members);
-            setWeek(d.week || SEED_WEEK);
-            setRoster(d.roster || {});
-            lsWrite({ members: d.members, week: d.week, roster: d.roster });
-            setLoadStatus('loaded');
-            setLoadMsg(`${d.members.length}명 불러옴`);
-            setTimeout(() => setLoadStatus('idle'), 2500);
-          } else {
-            setLoadStatus('error');
-            setLoadMsg('members 필드 없음');
-            setTimeout(() => setLoadStatus('idle'), 4000);
-          }
-        } else {
-          setLoadStatus('error');
-          setLoadMsg('저장된 데이터 없음');
-          setTimeout(() => setLoadStatus('idle'), 4000);
-        }
-      })
-      .catch(err => {
-        setLoadStatus('error');
-        setLoadMsg(err?.code || err?.message || '연결 실패');
-        setTimeout(() => setLoadStatus('idle'), 4000);
-      });
-  }
-
   function handleGenerate() {
     // 현재 roster를 전주 데이터로 넘겨 순환 배정 적용
     const r = autoBuildRoster(members, week, {}, roster);
@@ -2253,7 +2217,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   return (
     <div style={{ width: '100%', height: '100%', background: theme.bg,
       display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-      <BrandHeader theme={theme} saveStatus={saveStatus} loadStatus={loadStatus} onLoad={handleLoad} loadMsg={loadMsg} />
+      <BrandHeader theme={theme} saveStatus={saveStatus} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
       </div>
@@ -2262,40 +2226,17 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   );
 }
 
-function BrandHeader({ theme, saveStatus, loadStatus, onLoad, loadMsg }) {
+function BrandHeader({ theme, saveStatus }) {
   const saving  = saveStatus === 'saving';
   const saved   = saveStatus === 'saved';
   const saveErr = saveStatus === 'error';
 
-  const loading = loadStatus === 'loading';
-  const loaded  = loadStatus === 'loaded';
-  const loadErr = loadStatus === 'error';
-
   const saveIcon  = saving ? '…' : saved ? '✓' : saveErr ? '⚠' : '☁';
   const saveColor = saved ? '#10B981' : saveErr ? '#EF4444' : theme.primary;
 
-  const loadBtnLabel = loading ? '불러오는 중…' : loaded ? '✓ 불러옴' : loadErr ? '⚠ 오류' : '↓ 불러오기';
-  const loadBtnBg    = loaded ? '#10B981' : loadErr ? '#EF4444' : '#fff';
-  const loadBtnColor = loaded || loadErr ? '#fff' : theme.primary;
-
-  const btnStyle = (bg, color, disabled) => ({
-    border: `1.5px solid ${color === '#fff' ? theme.primary : 'transparent'}`,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    background: bg,
-    color: color,
-    borderRadius: 999,
-    padding: '5px 12px',
-    fontSize: 12,
-    fontWeight: 700,
-    fontFamily: theme.fontBody,
-    opacity: disabled ? 0.7 : 1,
-    transition: 'background 0.2s',
-    whiteSpace: 'nowrap',
-  });
-
   return (
     <div style={{
-      padding: '10px 12px',
+      padding: '10px 16px',
       background: theme.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       borderBottom: `1px solid ${theme.border}`,
@@ -2311,30 +2252,15 @@ function BrandHeader({ theme, saveStatus, loadStatus, onLoad, loadMsg }) {
           주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={onLoad} disabled={loading || saving}
-            style={btnStyle(loadBtnBg, loadBtnColor, loading || saving)}>
-            {loadBtnLabel}
-          </button>
-          <div style={{
-            width: 32, height: 32, borderRadius: 999,
-            background: saveColor,
-            color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, fontWeight: 700,
-            boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
-            transition: 'background 0.3s',
-            flexShrink: 0,
-          }}>
-            {saveIcon}
-          </div>
-        </div>
-        {loadMsg ? (
-          <div style={{ fontSize: 10, color: loadErr ? '#EF4444' : '#10B981', fontWeight: 600 }}>
-            {loadMsg}
-          </div>
-        ) : null}
+      <div style={{
+        width: 32, height: 32, borderRadius: 999,
+        background: saveColor, color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 15, fontWeight: 700,
+        boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
+        transition: 'background 0.3s',
+      }}>
+        {saveIcon}
       </div>
     </div>
   );
