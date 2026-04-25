@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>찬양팀 로스터 · 주안교회</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'Apple SD Gothic Neo', -apple-system, system-ui, sans-serif;
+    background: #ECECEE;
+    overflow: hidden;
+  }
+  * { -webkit-font-smoothing: antialiased; }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-2deg) scale(1.02); }
+    50% { transform: rotate(2deg) scale(1.05); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+  }
+  input, button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="root" style="width:100%;height:100%;"></div>
+
+<template id="__bundler_thumbnail" data-bg-color="#ECECEE">
+  <svg viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
+    <!-- iPhone 모양 실루엣 -->
+    <rect x="120" y="80" width="360" height="640" rx="56" ry="56" fill="#1a1a1a"/>
+    <rect x="138" y="98" width="324" height="604" rx="42" ry="42" fill="#FFF6E5"/>
+    <!-- notch -->
+    <rect x="252" y="118" width="96" height="22" rx="11" ry="11" fill="#1a1a1a"/>
+    <!-- 헤더 칩 -->
+    <rect x="170" y="180" width="220" height="36" rx="18" ry="18" fill="#FFD93D"/>
+    <!-- 카드 1 (피아노) -->
+    <rect x="170" y="248" width="260" height="88" rx="20" ry="20" fill="#FF6B6B"/>
+    <rect x="190" y="280" width="60" height="24" rx="3" ry="3" fill="#fff"/>
+    <rect x="194" y="280" width="4" height="14" fill="#1a1a1a"/>
+    <rect x="206" y="280" width="4" height="14" fill="#1a1a1a"/>
+    <rect x="218" y="280" width="4" height="14" fill="#1a1a1a"/>
+    <rect x="230" y="280" width="4" height="14" fill="#1a1a1a"/>
+    <rect x="242" y="280" width="4" height="14" fill="#1a1a1a"/>
+    <!-- 카드 2 (드럼) -->
+    <rect x="170" y="352" width="260" height="88" rx="20" ry="20" fill="#4ECDC4"/>
+    <circle cx="220" cy="396" r="22" fill="#fff"/>
+    <circle cx="220" cy="396" r="14" fill="#1a1a1a"/>
+    <!-- 카드 3 (기타) -->
+    <rect x="170" y="456" width="260" height="88" rx="20" ry="20" fill="#A78BFA"/>
+    <circle cx="220" cy="500" r="20" fill="#fff"/>
+    <rect x="240" y="494" width="80" height="12" rx="6" ry="6" fill="#fff"/>
+    <!-- 하단 탭 -->
+    <rect x="170" y="616" width="64" height="64" rx="20" ry="20" fill="#1a1a1a"/>
+    <rect x="244" y="616" width="64" height="64" rx="20" ry="20" fill="#FFD93D"/>
+    <rect x="318" y="616" width="64" height="64" rx="20" ry="20" fill="#1a1a1a"/>
+  </svg>
+</template>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- 데이터/로직 -->
+<script src="data.js?v=8"></script>
+
+<!-- 일러스트 + 컴포넌트 -->
+<script type="text/babel" src="instruments.jsx?v=8"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel" src="screen-members.jsx"></script>
+<script type="text/babel" src="screen-week.jsx"></script>
+<script type="text/babel" src="screen-roster.jsx?v=9"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect } = React;
+
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "theme": "cute",
+  "iconPalette": "auto",
+  "showBoth": true
+}/*EDITMODE-END*/;
+
+function Root() {
+  const [t, setT] = useTweaks(TWEAKS);
+  // iconPalette 'auto' 면 테마와 매칭
+  const palette = t.iconPalette === 'auto' ? (t.theme === 'bold' ? 'bold' : 'cute') : t.iconPalette;
+
+  const showBoth = t.showBoth;
+
+  const phone = (themeName) => (
+    <IOSDevice width={390} height={780} dark={false}>
+      <div style={{ height: '100%', paddingTop: 44, boxSizing: 'border-box' }}>
+        <RosterApp theme={themeName} iconPalette={palette} />
+      </div>
+    </IOSDevice>
+  );
+
+  return (
+    <>
+      <DesignCanvas
+        title="찬양팀 로스터"
+        subtitle="주안교회 · 모바일 프로토타입"
+        defaultBg="#ECECEE">
+        {showBoth ? (
+          <DCSection id="themes" title="테마 옵션">
+            <DCArtboard id="cute" label="Soft & Cute · 부드러운 핑크" width={390} height={780}>
+              {phone('cute')}
+            </DCArtboard>
+            <DCArtboard id="bold" label="Bold Editorial · 옐로우 + 블랙" width={390} height={780}>
+              {phone('bold')}
+            </DCArtboard>
+          </DCSection>
+        ) : (
+          <DCSection id="single" title={t.theme === 'bold' ? 'Bold Editorial' : 'Soft & Cute'}>
+            <DCArtboard id="phone" label="찬양팀 로스터 앱" width={390} height={780}>
+              {phone(t.theme)}
+            </DCArtboard>
+          </DCSection>
+        )}
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="레이아웃">
+          <TweakToggle label="두 테마 나란히 보기" value={t.showBoth} onChange={v => setT({ showBoth: v })} />
+        </TweakSection>
+        <TweakSection title="단일 보기 테마">
+          <TweakRadio
+            value={t.theme}
+            onChange={v => setT({ theme: v })}
+            options={[
+              { value: 'cute', label: 'Soft & Cute' },
+              { value: 'bold', label: 'Bold Editorial' },
+            ]} />
+        </TweakSection>
+        <TweakSection title="악기 일러스트 컬러">
+          <TweakRadio
+            value={t.iconPalette}
+            onChange={v => setT({ iconPalette: v })}
+            options={[
+              { value: 'auto', label: '테마와 매칭' },
+              { value: 'cute', label: '파스텔' },
+              { value: 'bold', label: '블랙 + 옐로우' },
+              { value: 'neon', label: '네온' },
+            ]} />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+</script>
+</body>
+</html>
