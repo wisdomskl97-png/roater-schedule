@@ -2099,7 +2099,7 @@ function AppLoader({ theme: themeName = 'cute', iconPalette }) {
   React.useEffect(() => {
     window.FSDOC.get()
       .then(snap => {
-        if (snap.exists()) {
+        if (snap.exists) {
           const d = snap.data();
           if (d.members) {
             const data = { members: d.members, week: d.week, roster: d.roster };
@@ -2174,7 +2174,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
     setLoadMsg('');
     window.FSDOC.get()
       .then(snap => {
-        if (snap.exists()) {
+        if (snap.exists) {
           const d = snap.data();
           if (d.members) {
             setMembers(d.members);
