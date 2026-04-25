@@ -65,38 +65,18 @@ const INSTRUMENTS = [
   { id: 'violin',    label: '바이올린',   short: '바이올린', en: 'Violin',       hue: 320 },
 ];
 
-// 8~12명 가상 멤버 (한국 이름)
-const SEED_MEMBERS = [
-  { id: 'm1',  name: '김민수', instruments: ['mainKey', 'secondKey'],     defaultService: 'both',     active: true,  note: '' },
-  { id: 'm2',  name: '박서연', instruments: ['secondKey', 'guitar'],      defaultService: 'both',     active: true,  note: '' },
-  { id: 'm3',  name: '이지훈', instruments: ['drum', 'cajon'],            defaultService: 'second',   active: true,  note: '3부만' },
-  { id: 'm4',  name: '최민재', instruments: ['guitar', 'bass'],           defaultService: 'both',     active: true,  note: '' },
-  { id: 'm5',  name: '정하은', instruments: ['mainKey', 'violin'],        defaultService: 'first',    active: true,  note: '2부 고정' },
-  { id: 'm6',  name: '이준호', instruments: ['bass', 'guitar'],           defaultService: 'both',     active: true,  note: '' },
-  { id: 'm7',  name: '한지원', instruments: ['secondKey', 'mainKey'],     defaultService: 'both',     active: true,  note: '' },
-  { id: 'm8',  name: '김도현', instruments: ['drum', 'cajon'],            defaultService: 'both',     active: true,  note: '' },
-  { id: 'm9',  name: '윤소정', instruments: ['acoustic', 'guitar'],       defaultService: 'second',   active: true,  note: '' },
-  { id: 'm10', name: '강태윤', instruments: ['drum'],                     defaultService: 'both',     active: true,  note: '' },
-  { id: 'm11', name: '서지안', instruments: ['mainKey', 'acoustic'],      defaultService: 'first',    active: true,  note: '' },
-  { id: 'm12', name: '오민혁', instruments: ['bass', 'cajon'],            defaultService: 'both',     active: false, note: '교환학생 휴식' },
-  { id: 'm13', name: '김예슬', instruments: ['violin'],                   defaultService: 'both',     active: true,  note: '' },
-  { id: 'm14', name: '박찬우', instruments: ['acoustic', 'cajon'],        defaultService: 'both',     active: true,  note: '' },
-];
+// 빈 초기값 (목업 데이터 없음)
+const SEED_MEMBERS = [];
 
 // 인도자 후보
-const LEADERS = ['박인도', '최인도', '정인도', '강인도'];
+const LEADERS = [];
 
-// 이번 주 정보 (2026-05-03)
+// 이번 주 정보 기본값
 const SEED_WEEK = {
-  date: '2026-05-03',
-  firstLeader: '박인도',
-  secondLeader: '박인도',
-  // availability: { memberId: { first: bool, second: bool, note: string } }
-  availability: {
-    m3: { first: false, second: true,  note: '오전 일정' },
-    m5: { first: true,  second: false, note: '' },
-    m9: { first: false, second: true,  note: '' },
-  },
+  date: '',
+  firstLeader: '',
+  secondLeader: '',
+  availability: {},
 };
 
 // ─────────────────────────────────────────────────────────
