@@ -127,6 +127,10 @@ function buildServiceRoster(members, week, service, preferred = {}, recentCounts
       const ra = recentCounts[a.id] || 0;
       const rb = recentCounts[b.id] || 0;
       if (ra !== rb) return ra - rb;
+      // 선호도: instruments 배열에서 이 악기의 인덱스가 낮을수록 선호
+      const pa = a.instruments.indexOf(inst.id);
+      const pb = b.instruments.indexOf(inst.id);
+      if (pa !== pb) return pa - pb;
       return a.instruments.length - b.instruments.length;
     });
 
@@ -1247,11 +1251,15 @@ function MemberEditSheet({ theme, member, onClose, onSave, onDelete }) {
             }}/>
         </Field>
 
-        {/* 악기 */}
-        <Field label="가능 악기" theme={theme}>
+        {/* 악기 — 선택 순서 = 선호도 */}
+        <Field label="가능 악기 (선택 순서 = 선호도 순위)" theme={theme}>
+          <div style={{ fontSize: 11, color: theme.textMuted, marginBottom: 8 }}>
+            먼저 선택한 악기를 로스터 배정 시 우선 고려해요
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {INSTRUMENTS.map(inst => {
-              const sel = m.instruments.includes(inst.id);
+              const selIdx = m.instruments.indexOf(inst.id);
+              const sel = selIdx !== -1;
               return (
                 <button key={inst.id} onClick={() => toggleInst(inst.id)}
                   style={{
@@ -1263,7 +1271,21 @@ function MemberEditSheet({ theme, member, onClose, onSave, onDelete }) {
                     cursor: 'pointer',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                     fontFamily: theme.fontBody, fontWeight: 700, fontSize: 12,
+                    position: 'relative',
                   }}>
+                  {sel && (
+                    <div style={{
+                      position: 'absolute', top: 5, right: 5,
+                      width: 18, height: 18, borderRadius: 999,
+                      background: 'rgba(255,255,255,0.35)',
+                      color: theme.primaryFg,
+                      fontSize: 11, fontWeight: 900,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      lineHeight: 1,
+                    }}>
+                      {selIdx + 1}
+                    </div>
+                  )}
                   <div style={{ filter: sel ? 'none' : 'grayscale(0.4)', opacity: sel ? 1 : 0.85 }}>
                     <InstrumentIcon id={inst.id} size={44} paletteName={theme.iconPalette || 'cute'} />
                   </div>
