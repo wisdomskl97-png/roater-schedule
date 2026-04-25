@@ -1145,10 +1145,15 @@ function MembersScreen({ members, setMembers, theme }) {
         </div>
       </div>
 
-      {/* 스크롤 멤버 리스트 */}
+      {/* 스크롤 멤버 리스트 — 이름순, 비활성 맨 아래 */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {members.map(m => (
+        {[...members]
+          .sort((a, b) => {
+            if (a.active !== b.active) return a.active ? -1 : 1;
+            return a.name.localeCompare(b.name, 'ko');
+          })
+          .map(m => (
           <div key={m.id}
             onClick={() => setEditingId(m.id)}
             style={{
@@ -1161,7 +1166,6 @@ function MembersScreen({ members, setMembers, theme }) {
               display: 'flex', alignItems: 'center', gap: 12,
               opacity: m.active ? 1 : 0.5,
             }}>
-            <MemberAvatar name={m.name} size={44} theme={theme} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontWeight: 700, fontSize: 17 }}>{m.name}</span>
@@ -1540,7 +1544,6 @@ function WeekScreen({ members, week, setWeek, theme, onGenerate }) {
               boxShadow: theme.shadow,
               display: 'flex', alignItems: 'center', gap: 10,
             }}>
-              <MemberAvatar name={m.name} size={36} theme={theme} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{m.name}</div>
                 <div style={{ fontSize: 11, color: theme.textMuted }}>
@@ -1896,8 +1899,8 @@ function InstrumentSlot({ theme, instrument, member, warnings, animating, animat
         <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>{instrument.label}</div>
       </div>
 
-      {/* 경고 뱃지 */}
-      {hasWarning && reelStopped &&
+      {/* 경고 뱃지 — 미배정 제외한 경우만 표시 */}
+      {hasWarning && reelStopped && warnings[0].type !== 'empty' &&
       <div style={{
         position: 'absolute', top: -6, right: -6,
         background: theme.danger, color: '#fff',
@@ -1907,8 +1910,7 @@ function InstrumentSlot({ theme, instrument, member, warnings, animating, animat
         boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
         display: 'flex', alignItems: 'center', gap: 4
       }}>
-          ⚠ {warnings[0].type === 'empty' ? '미배정' :
-        warnings[0].type === 'unavailable' ? '불가능' :
+          ⚠ {warnings[0].type === 'unavailable' ? '불가능' :
         warnings[0].type === 'duplicate' ? '중복' :
         warnings[0].type === 'wrongInstrument' ? '악기 불일치' : '확인'}
         </div>
