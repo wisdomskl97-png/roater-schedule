@@ -2178,21 +2178,23 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
   const [saveStatus, setSaveStatus] = useAppState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
 
-  function handleSave() {
-    setSaveStatus('saving');
+  // 자동저장 — 첫 렌더(초기 로드) 제외하고 변경 시마다 저장
+  const isFirstRender = React.useRef(true);
+  React.useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     const data = { members, week, roster };
+    lsWrite(data); // 즉시 localStorage 백업
+    setSaveStatus('saving');
     window.FSDOC.set(data)
       .then(() => {
-        // Firestore 저장 성공 시 localStorage에도 백업 (같은 기기 refresh 대비)
-        lsWrite(data);
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
+        setTimeout(() => setSaveStatus('idle'), 1500);
       })
       .catch(() => {
         setSaveStatus('error');
         setTimeout(() => setSaveStatus('idle'), 3000);
       });
-  }
+  }, [members, week, roster]);
 
   // Firebase에서 최신 데이터 수동 불러오기
   const [loadStatus, setLoadStatus] = useAppState('idle'); // 'idle' | 'loading' | 'loaded' | 'error'
@@ -2251,7 +2253,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   return (
     <div style={{ width: '100%', height: '100%', background: theme.bg,
       display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-      <BrandHeader theme={theme} saveStatus={saveStatus} onSave={handleSave} loadStatus={loadStatus} onLoad={handleLoad} loadMsg={loadMsg} />
+      <BrandHeader theme={theme} saveStatus={saveStatus} loadStatus={loadStatus} onLoad={handleLoad} loadMsg={loadMsg} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
       </div>
@@ -2260,7 +2262,7 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   );
 }
 
-function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad, loadMsg }) {
+function BrandHeader({ theme, saveStatus, loadStatus, onLoad, loadMsg }) {
   const saving  = saveStatus === 'saving';
   const saved   = saveStatus === 'saved';
   const saveErr = saveStatus === 'error';
@@ -2269,8 +2271,8 @@ function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad, loadMsg })
   const loaded  = loadStatus === 'loaded';
   const loadErr = loadStatus === 'error';
 
-  const saveBtnLabel = saving ? '…' : saved ? '✓' : saveErr ? '⚠' : '☁';
-  const saveBtnBg    = saved ? '#10B981' : saveErr ? '#EF4444' : theme.primary;
+  const saveIcon  = saving ? '…' : saved ? '✓' : saveErr ? '⚠' : '☁';
+  const saveColor = saved ? '#10B981' : saveErr ? '#EF4444' : theme.primary;
 
   const loadBtnLabel = loading ? '불러오는 중…' : loaded ? '✓ 불러옴' : loadErr ? '⚠ 오류' : '↓ 불러오기';
   const loadBtnBg    = loaded ? '#10B981' : loadErr ? '#EF4444' : '#fff';
@@ -2315,10 +2317,18 @@ function BrandHeader({ theme, saveStatus, onSave, loadStatus, onLoad, loadMsg })
             style={btnStyle(loadBtnBg, loadBtnColor, loading || saving)}>
             {loadBtnLabel}
           </button>
-          <button onClick={onSave} disabled={saving || loading}
-            style={{ ...btnStyle(saveBtnBg, '#fff', saving || loading), boxShadow: '0 2px 8px rgba(236,72,153,0.2)', padding: '5px 10px', fontSize: 15 }}>
-            {saveBtnLabel}
-          </button>
+          <div style={{
+            width: 32, height: 32, borderRadius: 999,
+            background: saveColor,
+            color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 15, fontWeight: 700,
+            boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
+            transition: 'background 0.3s',
+            flexShrink: 0,
+          }}>
+            {saveIcon}
+          </div>
         </div>
         {loadMsg ? (
           <div style={{ fontSize: 10, color: loadErr ? '#EF4444' : '#10B981', fontWeight: 600 }}>
