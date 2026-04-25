@@ -2102,29 +2102,27 @@ Object.assign(window, { RosterScreen });</script>
 
 const { useState: useAppState } = React;
 
-function saveLS(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
-}
-
+// ── Firestore 로드/저장 래퍼 ──────────────────────────────
 function AppLoader({ theme: themeName = 'cute', iconPalette }) {
   const [ready, setReady] = React.useState(false);
   const [initData, setInitData] = React.useState(null);
 
   React.useEffect(() => {
-    // 항상 Firestore에서 최신 데이터를 먼저 가져옴
-    window.FSDOC.get().then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        setInitData({ members: d.members, week: d.week, roster: d.roster });
-      }
-      setReady(true);
-    }).catch(() => setReady(true)); // 오류 시에도 앱 실행
+    window.FSDOC.get()
+      .then(snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setInitData({ members: d.members, week: d.week, roster: d.roster });
+        }
+        setReady(true);
+      })
+      .catch(() => setReady(true));
   }, []);
 
   if (!ready) {
     return (
-      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#FFF7F9', flexDirection: 'column', gap: 12 }}>
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', background: '#FFF7F9', flexDirection: 'column', gap: 12 }}>
         <div style={{ fontSize: 32 }}>🌸</div>
         <div style={{ fontSize: 14, color: '#9F6B82', fontWeight: 600 }}>불러오는 중...</div>
       </div>
@@ -2133,58 +2131,29 @@ function AppLoader({ theme: themeName = 'cute', iconPalette }) {
   return <RosterApp theme={themeName} iconPalette={iconPalette} initData={initData} />;
 }
 
+// ── 메인 앱 ────────────────────────────────────────────────
 function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   const themeBase = THEMES[themeName];
-  const theme = { ...themeBase, iconPalette: iconPalette || (themeName === 'bold' ? 'bold' : 'cute') };
+  const theme = { ...themeBase, iconPalette: iconPalette || 'cute' };
 
-  const [members, setMembersState] = useAppState(() => initData?.members || SEED_MEMBERS);
-  const [week, setWeekState] = useAppState(() => initData?.week || SEED_WEEK);
-  const [tab, setTab] = useAppState('week');
-  const [roster, setRosterState] = useAppState(() => {
-    if (initData?.roster) return initData.roster;
-    return autoBuildRoster(initData?.members || SEED_MEMBERS, initData?.week || SEED_WEEK);
-  });
+  const [members, setMembers] = useAppState(() => initData?.members || SEED_MEMBERS);
+  const [week,    setWeek]    = useAppState(() => initData?.week    || SEED_WEEK);
+  const [tab,     setTab]     = useAppState('week');
+  const [roster,  setRoster]  = useAppState(() =>
+    initData?.roster || autoBuildRoster(initData?.members || SEED_MEMBERS, initData?.week || SEED_WEEK)
+  );
   const [animateOnMount, setAnimateOnMount] = useAppState(false);
-  const [cloudStatus, setCloudStatus] = useAppState('synced');
+  const [saveStatus, setSaveStatus] = useAppState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
 
-  // 최신 state를 ref로 추적
-  const latestRef = React.useRef({ members, week, roster });
-  React.useEffect(() => { latestRef.current.members = members; }, [members]);
-  React.useEffect(() => { latestRef.current.week = week; }, [week]);
-  React.useEffect(() => { latestRef.current.roster = roster; }, [roster]);
-
-  // 실시간 리스너 — 다른 기기 변경사항 반영
-  React.useEffect(() => {
-    const unsub = window.FSDOC.onSnapshot(snap => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      if (d.members) setMembersState(d.members);
-      if (d.week)    setWeekState(d.week);
-      if (d.roster)  setRosterState(d.roster);
-      setCloudStatus('synced');
-    }, () => setCloudStatus('error'));
-    return () => unsub();
-  }, []);
-
-  // Firestore 저장
-  function pushToCloud(m, w, r) {
-    setCloudStatus('saving');
-    window.FSDOC.set({ members: m, week: w, roster: r })
-      .then(() => setCloudStatus('synced'))
-      .catch(() => setCloudStatus('error'));
-  }
-
-  function setMembers(v) {
-    setMembersState(v); saveLS('roaster_members', v);
-    pushToCloud(v, latestRef.current.week, latestRef.current.roster);
-  }
-  function setWeek(v) {
-    setWeekState(v); saveLS('roaster_week', v);
-    pushToCloud(latestRef.current.members, v, latestRef.current.roster);
-  }
-  function setRoster(v) {
-    setRosterState(v); saveLS('roaster_roster', v);
-    pushToCloud(latestRef.current.members, latestRef.current.week, v);
+  // 저장 버튼 — 현재 state를 Firestore에 업로드
+  function handleSave(curMembers, curWeek, curRoster) {
+    setSaveStatus('saving');
+    window.FSDOC.set({ members: curMembers, week: curWeek, roster: curRoster })
+      .then(() => {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      })
+      .catch(() => setSaveStatus('error'));
   }
 
   function handleGenerate() {
@@ -2205,39 +2174,37 @@ function RosterApp({ theme: themeName = 'cute', iconPalette, initData }) {
   }
 
   return (
-    <div style={{
-      width: '100%', height: '100%',
-      background: theme.bg,
-      display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
-      position: 'relative',
-    }}>
-      {/* 상단 브랜드 바 */}
-      <BrandHeader theme={theme} themeName={themeName} cloudStatus={cloudStatus} />
-      {/* 컨텐츠 */}
+    <div style={{ width: '100%', height: '100%', background: theme.bg,
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <BrandHeader theme={theme}
+        saveStatus={saveStatus}
+        onSave={() => handleSave(members, week, roster)} />
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {content}
       </div>
-      {/* 하단 탭 */}
       <TabBar active={tab} onChange={setTab} theme={theme} />
     </div>
   );
 }
 
-function BrandHeader({ theme, themeName, cloudStatus }) {
-  const statusIcon = cloudStatus === 'synced' ? '☁️' : cloudStatus === 'error' ? '⚠️' : '⏳';
-  const statusTip  = cloudStatus === 'synced' ? '클라우드 저장됨' : cloudStatus === 'error' ? '저장 오류' : '연결 중...';
+function BrandHeader({ theme, saveStatus, onSave }) {
+  const saving  = saveStatus === 'saving';
+  const saved   = saveStatus === 'saved';
+  const errored = saveStatus === 'error';
+
+  const btnLabel = saving ? '저장 중…' : saved ? '✓ 저장됨' : errored ? '⚠ 오류' : '☁ 저장';
+  const btnBg    = saved ? '#10B981' : errored ? theme.danger : theme.primary;
+
   return (
     <div style={{
-      padding: '12px 20px 10px',
+      padding: '10px 16px',
       background: theme.bg,
-      borderBottom: themeName === 'bold' ? `2px solid ${theme.border}` : 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      borderBottom: `1px solid ${theme.border}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{
-          width: 28, height: 28,
-          borderRadius: theme.radius >= 16 ? 8 : 4,
+          width: 28, height: 28, borderRadius: 8,
           background: theme.primary, color: theme.primaryFg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: theme.fontHead, fontWeight: 900, fontSize: 14,
@@ -2246,10 +2213,19 @@ function BrandHeader({ theme, themeName, cloudStatus }) {
           주안교회 <span style={{ color: theme.textMuted, fontWeight: 600 }}>· 찬양팀</span>
         </div>
       </div>
-      <div title={statusTip} style={{
-        fontSize: 13, cursor: 'default',
-        opacity: cloudStatus === 'synced' ? 0.5 : 1,
-      }}>{statusIcon}</div>
+      <button onClick={onSave} disabled={saving}
+        style={{
+          border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+          background: btnBg, color: '#fff',
+          borderRadius: 999, padding: '6px 14px',
+          fontSize: 13, fontWeight: 700,
+          fontFamily: theme.fontBody,
+          opacity: saving ? 0.7 : 1,
+          transition: 'background 0.2s',
+          boxShadow: '0 2px 8px rgba(236,72,153,0.2)',
+        }}>
+        {btnLabel}
+      </button>
     </div>
   );
 }
